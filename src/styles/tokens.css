@@ -1,0 +1,34 @@
+:root{
+    --navy:#1B2A4A;
+    --navy-soft:#24355C;
+    --navy-light:#3D5080;
+    --page:#F6F7FB;
+    --paper:#FFFFFF;
+    --border:#E6E8F0;
+    --border-strong:#D3D7E3;
+    --text:#1B2030;
+    --text-dim:#646B82;
+    --text-mute:#9298AC;
+    --amber:#E08A2C;
+    --amber-dark:#B86A18;
+    --amber-light:#FCEDDA;
+    --teal:#1B8C7A;
+    --teal-light:#E0F4EF;
+    --rose:#C8504A;
+    --rose-light:#FAE3E1;
+    --display:'Sora', sans-serif;
+    --body:'Inter', sans-serif;
+    --mono:'IBM Plex Mono', monospace;
+
+    /* radius scale */
+    --r-xs:7px; --r-sm:9px; --r:10px; --r-md:12px; --r-lg:14px; --r-xl:18px;
+    /* elevation — tuned to the navy ink so shadows read as part of the palette */
+    --shadow-xs:0 1px 2px rgba(27,32,48,0.05);
+    --shadow-sm:0 1px 3px rgba(27,32,48,0.06), 0 1px 2px rgba(27,32,48,0.04);
+    --shadow-md:0 6px 16px rgba(27,42,74,0.10), 0 2px 4px rgba(27,42,74,0.06);
+    --shadow-lg:0 18px 48px rgba(20,26,46,0.20);
+    --ring:0 0 0 3px var(--amber-light);
+    --ring-focus:0 0 0 3px rgba(224,138,44,0.35);
+    --ease:cubic-bezier(0.4,0,0.2,1);
+    --t-fast:120ms; --t:180ms; --t-slow:260ms;
+  }
