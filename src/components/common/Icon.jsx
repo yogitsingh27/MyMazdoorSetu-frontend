@@ -27,7 +27,7 @@ const PATHS = {
 export default function Icon({ name, size = 18, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke={color}
-      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={PATHS[name] || PATHS.user} />
     </svg>
   );

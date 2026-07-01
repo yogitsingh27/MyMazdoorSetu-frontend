@@ -6,3 +6,5 @@ export * from './notifications';
 export * from './messages';
 export * from './companies';
 export * from './skills';
+export * from './constructionProjects';
+export * from './showcase';

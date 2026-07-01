@@ -2,15 +2,16 @@
     --navy:#1B2A4A;
     --navy-soft:#24355C;
     --navy-light:#3D5080;
-    --page:#F6F7FB;
+    --ink:#0F1830; /* deep, near-black navy reserved for the two dark "record" bands — real drama, not pastel navy */
+    --page:#FAF8F3; /* warm paper, not clinical grey — the base tone of the whole product */
     --paper:#FFFFFF;
-    --border:#E6E8F0;
-    --border-strong:#D3D7E3;
+    --border:#EAE4D8;
+    --border-strong:#DAD2C0;
     --text:#1B2030;
     --text-dim:#646B82;
     --text-mute:#9298AC;
-    --amber:#E08A2C;
-    --amber-dark:#B86A18;
+    --amber:#DD7F16;
+    --amber-dark:#B06810;
     --amber-light:#FCEDDA;
     --teal:#1B8C7A;
     --teal-light:#E0F4EF;
@@ -19,6 +20,12 @@
     --display:'Sora', sans-serif;
     --body:'Inter', sans-serif;
     --mono:'IBM Plex Mono', monospace;
+
+    /* type scale — landing-page chapter hierarchy (hero, chapter headings, lead body, body) */
+    --fs-display:58px;
+    --fs-h2:34px;
+    --fs-body-lg:16px;
+    --fs-body:14.5px;
 
     /* radius scale */
     --r-xs:7px; --r-sm:9px; --r:10px; --r-md:12px; --r-lg:14px; --r-xl:18px;

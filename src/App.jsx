@@ -16,6 +16,8 @@ import EmptyState from '@/components/common/EmptyState';
 // Public
 import Landing from '@/pages/public/Landing';
 import JobsBrowse from '@/pages/public/JobsBrowse';
+import WorkersBrowse from '@/pages/public/WorkersBrowse';
+import ProjectsBrowse from '@/pages/public/ProjectsBrowse';
 // Auth
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
@@ -123,6 +125,8 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/how-it-works" element={<Landing />} />
         <Route path="/jobs" element={<JobsBrowse />} />
+        <Route path="/workers" element={<WorkersBrowse />} />
+        <Route path="/projects" element={<ProjectsBrowse />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Route>
