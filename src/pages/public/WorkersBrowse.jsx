@@ -17,7 +17,7 @@ export default function WorkersBrowse() {
         <EmptyState icon="users" title="No verified workers yet" hint="Check back soon as more workers join and get verified." />
       ) : (
         <div className="showcase-grid">
-          {ALL_WORKERS.map((w) => <WorkerShowcaseCard key={w.id} worker={w} />)}
+          {ALL_WORKERS.map((w) => <WorkerShowcaseCard key={w.id} worker={w} onClick={() => navigate(`/workers/${w.id}`)} />)}
         </div>
       )}
 

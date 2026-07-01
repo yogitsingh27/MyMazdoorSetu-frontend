@@ -18,7 +18,7 @@ export default function JobsBrowse() {
         <EmptyState icon="briefcase" title="No open jobs right now" hint="Check back soon, or register to get notified when matching work is posted." actionLabel="Register" onAction={() => navigate('/register')} />
       ) : (
         <div className="ticket-grid">
-          {jobs.map((j) => <JobTicket key={j.id} job={j} onApply={() => navigate('/register', { state: { preselectRole: 'worker' } })} />)}
+          {jobs.map((j) => <JobTicket key={j.id} job={j} onApply={() => navigate(`/jobs/${j.id}`)} />)}
         </div>
       )}
     </section>

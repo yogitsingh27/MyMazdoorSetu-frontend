@@ -35,6 +35,43 @@ export default {
     agent: { label: 'Agent', short: 'Agent', tagline: 'Register and manage workers.' },
   },
 
+  jobDetail: {
+    backToJobs: 'Back to jobs',
+    applyNow: 'Apply Now',
+    shareJob: 'Share job',
+    linkCopied: 'Link copied to clipboard',
+    verified: 'Verified',
+    hiringWorkersOne: 'Hiring {{count}} Worker',
+    hiringWorkersOther: 'Hiring {{count}} Workers',
+    description: 'Description',
+    requirements: 'Requirements',
+    facilities: 'Facilities',
+    postedToday: 'Posted today',
+    postedYesterday: 'Posted yesterday',
+    postedDaysAgo: 'Posted {{days}} days ago',
+    similarJobs: 'Similar jobs',
+    wantToApply: 'Want to apply for this job?',
+    notFound: "This job isn't available anymore",
+    notFoundHint: 'It may have been filled or removed. Browse other open jobs instead.',
+  },
+
+  workerDetail: {
+    backToWorkers: 'Back to workers',
+    contactWorker: 'Contact Worker',
+    completedJobs: 'Completed Jobs',
+    yearsExperience: 'Years Experience',
+    portfolio: 'Portfolio',
+    reviews: 'Reviews',
+    languages: 'Languages',
+    similarWorkers: 'Similar workers',
+    reviewedAfterJob: 'Reviewed after completed work',
+    wantToContact: 'Want to contact this worker?',
+    available: 'Available',
+    booked: 'Booked',
+    notFound: "This worker profile isn't available",
+    notFoundHint: 'They may no longer be active on the platform. Browse other verified workers instead.',
+  },
+
   landing: {
     audiences: {
       worker: {

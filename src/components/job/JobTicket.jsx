@@ -3,11 +3,31 @@ import { Stars } from '@/components/common/Rating';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // The signature "ticket" card. Visual markup identical to the prototype.
+// Clickable as a whole card when `onApply` is provided (the real list/detail
+// usages); left fully static when it isn't (the decorative hero preview),
+// so this one prop keeps controlling whether the card is interactive at all.
 export default function JobTicket({ job, onApply, actionLabel }) {
   const { t } = useLanguage();
   const label = actionLabel ?? t('common.apply');
+  const clickable = !!onApply;
+
+  const handleKeyDown = (e) => {
+    if (!clickable) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onApply(job);
+    }
+  };
+
   return (
-    <div className="ticket">
+    <div
+      className="ticket"
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onApply(job) : undefined}
+      onKeyDown={handleKeyDown}
+      style={clickable ? { cursor: 'pointer' } : undefined}
+    >
       <div className="ticket-stub">
         <div className="role-icon">{job.trade}</div>
         <div>
@@ -33,7 +53,7 @@ export default function JobTicket({ job, onApply, actionLabel }) {
         </div>
         <div className="ticket-action">
           <span className="ticket-id mono">{job.id}</span>
-          {onApply && <button className="btn-sm orange" onClick={() => onApply(job)}>{label}</button>}
+          {onApply && <button className="btn-sm orange" onClick={(e) => { e.stopPropagation(); onApply(job); }}>{label}</button>}
         </div>
       </div>
     </div>

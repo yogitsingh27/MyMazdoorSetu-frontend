@@ -598,3 +598,89 @@
   @media (max-width:720px){
     .chapter-paper, .chapter-dark{padding:12px 0;}
   }
+
+  /* ============================================================
+     JOB DETAIL — single readable column (not a dense sidebar layout,
+     which is the wrong pattern for a quick-scan, mobile-first audience).
+     ============================================================ */
+  .back-link{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text-dim); margin-bottom:20px; transition:color var(--t-fast) var(--ease);}
+  .back-link:hover{color:var(--navy);}
+  .back-link svg{transform:rotate(180deg);}
+
+  .job-detail-layout{max-width:640px;}
+  .job-detail-layout h1{font-size:28px; font-weight:700; color:var(--navy); letter-spacing:-0.02em; margin:10px 0 12px; line-height:1.2;}
+  .job-detail-meta{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--text-dim); margin-bottom:20px;}
+  .job-detail-meta span{display:flex; align-items:center; gap:5px;}
+
+  .job-detail-wage-card{background:var(--navy); color:#fff; border-radius:14px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:baseline; gap:10px;}
+  .job-detail-wage-card .wage-label{font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:#A7B0CC;}
+  .job-detail-wage{font-family:var(--mono); font-feature-settings:"tnum" 1; font-size:22px; font-weight:700;}
+
+  /* Poster identity — the employer/contractor's name is the prominent
+     element here, with role/verification as supporting detail, not the
+     other way around (a worker decides based on who's hiring, not just what role they hold). */
+  .poster-card{display:flex; align-items:center; gap:12px; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:20px; flex-wrap:wrap;}
+  .poster-id{flex:1; min-width:160px;}
+  .poster-name{font-family:var(--display); font-weight:700; font-size:15.5px; color:var(--text);}
+  .poster-role{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); margin-top:3px; flex-wrap:wrap;}
+  .poster-rating{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-dim);}
+  .poster-reviews{color:var(--text-mute);}
+
+  .job-detail-openings{font-size:15px; font-weight:600; color:var(--navy); margin-bottom:16px;}
+  .job-detail-openings .ledger-num{font-size:16px;}
+
+  .job-detail-ctas{display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap;}
+
+  .job-detail-section{margin-bottom:26px;}
+  .job-detail-section h3{font-size:16px; font-weight:700; color:var(--navy); margin-bottom:10px;}
+  .job-detail-section p{font-size:14px; color:var(--text-dim); line-height:1.65;}
+
+  .checklist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
+  .checklist li{display:flex; align-items:flex-start; gap:8px; font-size:14px; color:var(--text); line-height:1.4;}
+  .checklist li svg{flex-shrink:0; margin-top:2px;}
+
+  /* Facilities — small icons for fast scanning, distinct from the
+     requirements checklist (offer vs. requirement, not the same list twice). */
+  .facility-list{display:flex; flex-wrap:wrap; gap:10px;}
+  .facility{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--teal); background:var(--teal-light); padding:7px 12px; border-radius:9px;}
+
+  .job-detail-posted{font-size:12px; color:var(--text-mute);}
+
+  .job-detail-similar{max-width:1180px; margin-top:40px; padding-top:32px; border-top:1px solid var(--border);}
+  .job-detail-similar h3{font-size:18px; font-weight:700; color:var(--navy); margin-bottom:18px;}
+
+  /* Sticky mobile Apply bar — the one decisive action stays a thumb-reach
+     away regardless of scroll position; hidden on desktop where the inline
+     CTA row already does the job. */
+  .sticky-apply-bar{display:none;}
+
+  /* ============================================================
+     WORKER DETAIL — mirrors the Job Detail layout (single column,
+     sticky mobile CTA) rather than introducing a second pattern.
+     ============================================================ */
+  .worker-detail-layout{max-width:640px;}
+  .worker-detail-head{display:flex; align-items:center; gap:16px; margin-bottom:18px;}
+  .worker-detail-head h1{font-size:24px; font-weight:700; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px;}
+  .worker-detail-meta{display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:13px; color:var(--text-dim);}
+  .worker-detail-meta span{display:flex; align-items:center; gap:5px;}
+
+  .worker-detail-rating-row{display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;}
+  .worker-detail-rating{font-size:17px;}
+
+  .worker-stats{display:flex; gap:28px; margin-bottom:24px; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .worker-stat-num{font-size:24px;}
+  .worker-stat-lbl{font-size:12px; color:var(--text-dim); margin-top:2px;}
+
+  @media (max-width:720px){
+    .job-detail, .worker-detail{padding-bottom:88px;}
+    .job-detail-layout h1, .worker-detail-head h1{font-size:22px;}
+    .job-detail-apply-inline, .worker-detail-contact-inline{display:none;}
+    .sticky-apply-bar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      position:fixed; left:0; right:0; bottom:0; z-index:40;
+      background:var(--paper); border-top:1px solid var(--border); box-shadow:var(--shadow-lg);
+      padding:12px 16px;
+    }
+    .sticky-apply-wage{font-weight:700; font-size:15px; color:var(--navy);}
+    .sticky-apply-bar .btn{flex-shrink:0;}
+  }

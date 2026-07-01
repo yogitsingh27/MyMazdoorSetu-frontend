@@ -63,12 +63,16 @@
  * @property {string} wage
  * @property {string} location
  * @property {string} duration
- * @property {string[]} tags
+ * @property {string[]} tags              Amenities the poster offers (meals, tools, etc.) — distinct from requirements.
  * @property {string} postedById
  * @property {Role} postedByRole
  * @property {number} posterRating
  * @property {number} posterReviews
  * @property {'open'|'active'|'completed'|'closed'} status
+ * @property {string} description         Full job description, shown on the job detail page.
+ * @property {string[]} requirements      What the worker needs to have/do — distinct from tags.
+ * @property {string} postedAt            ISO date string.
+ * @property {number} openings            How many workers are being hired for this listing.
  */
 
 /**
@@ -77,6 +81,20 @@
  * @property {string} jobId
  * @property {string} applicantId
  * @property {'pending'|'active'|'closed'} status
+ */
+
+/**
+ * @typedef {Object} Review
+ * @property {string} id
+ * @property {string} workerId       Which worker's public profile this review appears on.
+ * @property {string} by             Display name of the reviewer (a contractor or employer).
+ * @property {string} role
+ * @property {string=} job           Job ID this review is tied to, if any.
+ * @property {boolean} verified      True when linked to a completed job — shown as "reviewed after completed work".
+ * @property {number} overall
+ * @property {Object.<string, number>} cats
+ * @property {string} comment
+ * @property {string} date
  */
 
 export {}; // keep this a module

@@ -35,6 +35,43 @@ export default {
     agent: { label: 'एजेंट', short: 'एजेंट', tagline: 'मज़दूरों को रजिस्टर और मैनेज करें।' },
   },
 
+  jobDetail: {
+    backToJobs: 'नौकरियों पर वापस जाएं',
+    applyNow: 'आवेदन करें',
+    shareJob: 'नौकरी शेयर करें',
+    linkCopied: 'लिंक कॉपी हो गया',
+    verified: 'सत्यापित',
+    hiringWorkersOne: '{{count}} मज़दूर की ज़रूरत है',
+    hiringWorkersOther: '{{count}} मज़दूरों की ज़रूरत है',
+    description: 'विवरण',
+    requirements: 'ज़रूरी शर्तें',
+    facilities: 'सुविधाएं',
+    postedToday: 'आज पोस्ट की गई',
+    postedYesterday: 'कल पोस्ट की गई',
+    postedDaysAgo: '{{days}} दिन पहले पोस्ट की गई',
+    similarJobs: 'मिलती-जुलती नौकरियां',
+    wantToApply: 'इस नौकरी के लिए आवेदन करना चाहते हैं?',
+    notFound: 'यह नौकरी अब उपलब्ध नहीं है',
+    notFoundHint: 'हो सकता है यह भर दी गई हो या हटा दी गई हो। इसके बजाय दूसरी खुली नौकरियां देखें।',
+  },
+
+  workerDetail: {
+    backToWorkers: 'मज़दूरों पर वापस जाएं',
+    contactWorker: 'मज़दूर से संपर्क करें',
+    completedJobs: 'पूरे किए गए काम',
+    yearsExperience: 'वर्षों का अनुभव',
+    portfolio: 'पोर्टफ़ोलियो',
+    reviews: 'रिव्यू',
+    languages: 'भाषाएं',
+    similarWorkers: 'मिलते-जुलते मज़दूर',
+    reviewedAfterJob: 'पूरे हुए काम के बाद रिव्यू दिया गया',
+    wantToContact: 'इस मज़दूर से संपर्क करना चाहते हैं?',
+    available: 'उपलब्ध',
+    booked: 'व्यस्त',
+    notFound: 'यह मज़दूर प्रोफ़ाइल उपलब्ध नहीं है',
+    notFoundHint: 'हो सकता है वे अब प्लेटफ़ॉर्म पर सक्रिय न हों। इसके बजाय दूसरे सत्यापित मज़दूर देखें।',
+  },
+
   landing: {
     audiences: {
       worker: {

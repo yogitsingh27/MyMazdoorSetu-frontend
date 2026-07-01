@@ -116,7 +116,7 @@ export default function Landing() {
             <a className="view-all" onClick={() => navigate('/workers')}>{t('landing.sections.viewAllWorkers')} <Icon name="arrow" size={13} /></a>
           </div>
           <div className="showcase-grid">
-            {FEATURED_WORKERS.map((w) => <WorkerShowcaseCard key={w.id} worker={w} />)}
+            {FEATURED_WORKERS.map((w) => <WorkerShowcaseCard key={w.id} worker={w} onClick={() => navigate(`/workers/${w.id}`)} />)}
           </div>
           <div className="section-cta">
             <p>{t('landing.sections.skilledLookingForWork')}</p>
@@ -134,7 +134,7 @@ export default function Landing() {
           </div>
           <div className="ticket-grid">
             {JOBS.filter((j) => j.status === 'open').slice(0, 4).map((j) => (
-              <JobTicket key={j.id} job={j} onApply={() => goRegister(ROLE.WORKER)} />
+              <JobTicket key={j.id} job={j} onApply={() => navigate(`/jobs/${j.id}`)} />
             ))}
           </div>
         </section>

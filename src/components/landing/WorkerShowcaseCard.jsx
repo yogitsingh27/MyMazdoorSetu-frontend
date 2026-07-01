@@ -2,10 +2,30 @@ import Icon from '@/components/common/Icon';
 import { Stars } from '@/components/common/Rating';
 import { Avatar } from '@/components/common/Primitives';
 
-export default function WorkerShowcaseCard({ worker, compact = false }) {
+// Clickable as a whole card when `onClick` is provided (real listing usages);
+// left fully static when it isn't (decorative uses: the hero preview and the
+// Digital Labour Identity sample card) — same pattern as JobTicket.
+export default function WorkerShowcaseCard({ worker, compact = false, onClick }) {
   const wp = worker.workerProfile;
+  const clickable = !!onClick;
+
+  const handleKeyDown = (e) => {
+    if (!clickable) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(worker);
+    }
+  };
+
   return (
-    <div className={`worker-showcase-card${compact ? ' compact' : ''}`}>
+    <div
+      className={`worker-showcase-card${compact ? ' compact' : ''}`}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onClick(worker) : undefined}
+      onKeyDown={handleKeyDown}
+      style={clickable ? { cursor: 'pointer' } : undefined}
+    >
       <div className="wsc-top">
         <Avatar name={worker.name} color={worker.avatarColor} size={compact ? 34 : 46} />
         <div className="wsc-id">
