@@ -31,7 +31,8 @@ export default function WorkersBrowse() {
   };
   const clearFilters = () => setParams({}, { replace: true });
 
-  const { data: workers, loading } = useServiceData(() => WorkerService.search(filters), [params.toString()]);
+  const { data, loading } = useServiceData(() => WorkerService.search(filters), [params.toString()]);
+  const workers = data ?? [];
 
   if (loading) return <div className="section"><PageSkeleton stats={false} /></div>;
 

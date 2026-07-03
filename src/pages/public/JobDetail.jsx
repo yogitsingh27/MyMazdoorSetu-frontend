@@ -9,8 +9,6 @@ import { Avatar } from '@/components/common/Primitives';
 import JobTicket from '@/components/job/JobTicket';
 import EmptyState from '@/components/common/EmptyState';
 import { PageSkeleton } from '@/components/common/Skeleton';
-import { USERS } from '@/data/users';
-import { JOBS } from '@/data/jobs';
 import { EMPLOYER_KIND_LABELS } from '@/data/companies';
 import { ROLE } from '@/types/roles';
 
@@ -97,9 +95,9 @@ export default function JobDetail() {
     );
   }
 
-  const poster = USERS.find((u) => u.id === job.postedById);
-  const posterName = poster ? (poster.employerProfile?.orgName || poster.contractorProfile?.businessName || poster.name) : t(`roles.${job.postedByRole}.label`);
-  const similar = JOBS.filter((j) => j.id !== job.id && j.trade === job.trade && j.status === 'open').slice(0, 3);
+  const poster = job.poster;
+  const posterName = poster ? poster.name : t(`roles.${job.postedByRole}.label`);
+  const similar = job.similar || [];
   const days = daysAgo(job.postedAt);
 
   // Only Employer-posted jobs have a public profile today (see EmployerDetail).
@@ -147,8 +145,8 @@ export default function JobDetail() {
                 <div className="poster-name">{posterName}</div>
                 <div className="poster-role">
                   {t(`roles.${job.postedByRole}.label`)}
-                  {poster.employerProfile?.kind && (
-                    <span className="roletag">{EMPLOYER_KIND_LABELS[poster.employerProfile.kind] || poster.employerProfile.kind}</span>
+                  {poster.kind && (
+                    <span className="roletag">{EMPLOYER_KIND_LABELS[poster.kind] || poster.kind}</span>
                   )}
                   {poster.verified && <span className="verified-badge"><Icon name="check" size={11} /> {t('jobDetail.verified')}</span>}
                 </div>

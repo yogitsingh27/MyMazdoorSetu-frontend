@@ -1,8 +1,9 @@
-import { respond } from './http';
+import { respond, request, getOrNull, USE_API } from './http';
 import { JOBS } from '@/data/jobs';
 import { REVIEWS_FOR_WORKER } from '@/data/reviews';
 import { ALL_WORKERS } from '@/data/showcase';
 import { ApplicationService } from './ApplicationService';
+import { mapWorkerSummary, mapWorkerDetail } from './mappers';
 
 // Each filter key maps to a builder that takes the filter's value and
 // returns a (worker) => boolean test. Adding a future filter (experienceMin,
@@ -27,7 +28,18 @@ function applyFilters(items, filters) {
   return items.filter((item) => tests.every((test) => test(item)));
 }
 
+// Mock-mode enrichment: attach reviews + similar so Worker Detail consumes a
+// uniform shape whether the data came from mock or the API.
+function enrichMockWorker(w) {
+  return {
+    ...w,
+    reviews: REVIEWS_FOR_WORKER.filter((r) => r.workerId === w.id),
+    similar: ALL_WORKERS.filter((x) => x.id !== w.id && x.workerProfile.trade === w.workerProfile.trade).slice(0, 3),
+  };
+}
+
 export const WorkerService = {
+  // --- dashboard / internal (mock) ---
   async nearbyJobs() { return respond(JOBS.filter((j) => j.status === 'open')); },
   async myApplications(applicantId) { return ApplicationService.forApplicant(applicantId); },
   async apply(jobId, applicantId) { return ApplicationService.apply({ jobId, applicantId }); },
@@ -44,8 +56,31 @@ export const WorkerService = {
   },
   async setAvailability(value) { return respond({ availability: value }); },
 
+  // --- public read (API or mock) ---
+  async get(id) {
+    if (USE_API) {
+      const dto = await getOrNull(`/workers/${encodeURIComponent(id)}`);
+      return dto ? mapWorkerDetail(dto) : null;
+    }
+    const worker = ALL_WORKERS.find((w) => w.id === id);
+    return respond(worker ? enrichMockWorker(worker) : null);
+  },
+
   /** @param {import('@/types/models').SearchFilters} filters */
   async search(filters = {}) {
+    if (USE_API) {
+      const data = await request('/workers', {
+        params: {
+          q: filters.q,
+          trade: filters.trade,
+          city: filters.city,
+          availability: filters.availability,
+          verified: filters.verifiedOnly ? true : undefined,
+          pageSize: 100,
+        },
+      });
+      return data.items.map(mapWorkerSummary);
+    }
     return respond(applyFilters(ALL_WORKERS, filters));
   },
 };

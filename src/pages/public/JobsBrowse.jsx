@@ -29,7 +29,8 @@ export default function JobsBrowse() {
   };
   const clearFilters = () => setParams({}, { replace: true });
 
-  const { data: jobs, loading } = useServiceData(() => JobService.search(filters), [params.toString()]);
+  const { data, loading } = useServiceData(() => JobService.search(filters), [params.toString()]);
+  const jobs = data ?? [];
 
   if (loading) return <div className="section"><PageSkeleton stats={false} /></div>;
 

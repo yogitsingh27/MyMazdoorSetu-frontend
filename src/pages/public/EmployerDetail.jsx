@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useServiceData } from '@/hooks';
-import { ReviewService } from '@/services';
+import { EmployerService } from '@/services';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Icon from '@/components/common/Icon';
 import { Stars } from '@/components/common/Rating';
@@ -9,11 +9,8 @@ import { Avatar } from '@/components/common/Primitives';
 import JobTicket from '@/components/job/JobTicket';
 import EmptyState from '@/components/common/EmptyState';
 import { PageSkeleton } from '@/components/common/Skeleton';
-import { USERS } from '@/data/users';
-import { JOBS } from '@/data/jobs';
 import { HIRER_RATING_CATS } from '@/data/reviews';
 import { EMPLOYER_KIND_LABELS } from '@/data/companies';
-import { ROLE } from '@/types/roles';
 
 function scrollToOpenJobs() {
   document.getElementById('employer-open-jobs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -24,8 +21,9 @@ export default function EmployerDetail() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const employer = USERS.find((u) => u.id === id && u.employerProfile);
-  const { data: reviews, loading: reviewsLoading } = useServiceData(() => ReviewService.forHirerId(id), [id]);
+  const { data: employer, loading } = useServiceData(() => EmployerService.getPublic(id), [id]);
+
+  if (loading) return <div className="section"><PageSkeleton stats={false} /></div>;
 
   if (!employer) {
     return (
@@ -42,10 +40,8 @@ export default function EmployerDetail() {
   }
 
   const ep = employer.employerProfile;
-  // Jobs this account posted *as an employer* specifically — a multi-role
-  // account like Apex also posts as a contractor, and those listings belong
-  // to that other persona, not this profile.
-  const openJobs = JOBS.filter((j) => j.postedById === employer.id && j.postedByRole === ROLE.EMPLOYER && j.status === 'open');
+  const reviews = employer.reviews;
+  const openJobs = employer.openJobs;
 
   return (
     <>
@@ -81,9 +77,7 @@ export default function EmployerDetail() {
                 <span className="ledger-num">{ep.rating.toFixed(1)}</span>
               </div>
             </div>
-            {reviewsLoading ? (
-              <PageSkeleton stats={false} />
-            ) : reviews.length === 0 ? (
+            {reviews.length === 0 ? (
               <p style={{ fontSize: 13.5, color: 'var(--text-mute)', margin: 0 }}>{t('employerDetail.noReviewsYet')}</p>
             ) : (
               <RatingBars reviews={reviews} categories={HIRER_RATING_CATS} />
@@ -126,7 +120,7 @@ export default function EmployerDetail() {
             )}
           </div>
 
-          {!reviewsLoading && reviews.length > 0 && (
+          {reviews.length > 0 && (
             <div className="job-detail-section">
               <h3>{t('employerDetail.reviews')}</h3>
               {reviews.map((r) => (

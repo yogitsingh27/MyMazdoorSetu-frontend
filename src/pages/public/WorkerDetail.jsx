@@ -1,16 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useServiceData, useIntentGate, useIntentResumeToast } from '@/hooks';
-import { ReviewService } from '@/services';
+import { WorkerService } from '@/services';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import Icon from '@/components/common/Icon';
 import { Stars } from '@/components/common/Rating';
-import { RatingBars, avgOverall } from '@/components/common/Reviews';
+import { RatingBars } from '@/components/common/Reviews';
 import { Avatar } from '@/components/common/Primitives';
 import WorkerShowcaseCard from '@/components/landing/WorkerShowcaseCard';
 import EmptyState from '@/components/common/EmptyState';
 import { PageSkeleton } from '@/components/common/Skeleton';
-import { ALL_WORKERS } from '@/data/showcase';
 import { WORKER_RATING_CATS } from '@/data/reviews';
 import { ROLE } from '@/types/roles';
 
@@ -22,13 +21,14 @@ export default function WorkerDetail() {
   const gate = useIntentGate();
   useIntentResumeToast();
 
-  const worker = ALL_WORKERS.find((w) => w.id === id);
-  const { data: reviews, loading: reviewsLoading } = useServiceData(() => ReviewService.forWorkerId(id), [id]);
+  const { data: worker, loading } = useServiceData(() => WorkerService.get(id), [id]);
 
   const contactWorker = () => gate(
     { type: 'CONTACT_WORKER', payload: { workerId: id }, preselectRole: ROLE.EMPLOYER },
     () => toast(t('intent.alreadyLoggedInContact')),
   );
+
+  if (loading) return <div className="section"><PageSkeleton stats={false} /></div>;
 
   if (!worker) {
     return (
@@ -45,7 +45,8 @@ export default function WorkerDetail() {
   }
 
   const wp = worker.workerProfile;
-  const similar = ALL_WORKERS.filter((w) => w.id !== worker.id && w.workerProfile.trade === wp.trade).slice(0, 3);
+  const reviews = worker.reviews;
+  const similar = worker.similar;
 
   return (
     <>
@@ -111,9 +112,7 @@ export default function WorkerDetail() {
 
           <div className="job-detail-section">
             <h3>{t('workerDetail.reviews')}</h3>
-            {reviewsLoading ? (
-              <PageSkeleton stats={false} />
-            ) : reviews.length === 0 ? (
+            {reviews.length === 0 ? (
               <p style={{ fontSize: 13.5, color: 'var(--text-mute)' }}>—</p>
             ) : (
               <>
