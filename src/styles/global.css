@@ -671,10 +671,23 @@
   .worker-stat-num{font-size:24px;}
   .worker-stat-lbl{font-size:12px; color:var(--text-dim); margin-top:2px;}
 
+  /* ============================================================
+     EMPLOYER DETAIL — reuses the Job/Worker Detail layout and stat
+     classes; the trust panel is the one genuinely new element, since
+     trust metrics are the primary signal here and need to outweigh
+     the plain jobsPosted/currentlyHiring stat row below it.
+     ============================================================ */
+  .employer-tagline{font-size:13.5px; color:var(--text-dim); line-height:1.5; margin:0 0 18px;}
+
+  .trust-panel{background:var(--paper); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:22px;}
+  .trust-panel-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
+  .trust-panel-head h3{font-size:14.5px; font-weight:700; color:var(--navy); margin:0;}
+  .trust-panel-overall{display:flex; align-items:center; gap:8px;}
+
   @media (max-width:720px){
-    .job-detail, .worker-detail{padding-bottom:88px;}
+    .job-detail, .worker-detail, .employer-detail{padding-bottom:88px;}
     .job-detail-layout h1, .worker-detail-head h1{font-size:22px;}
-    .job-detail-apply-inline, .worker-detail-contact-inline{display:none;}
+    .job-detail-apply-inline, .job-detail-withdraw-inline, .worker-detail-contact-inline, .employer-detail-viewjobs-inline{display:none;}
     .sticky-apply-bar{
       display:flex; align-items:center; justify-content:space-between; gap:12px;
       position:fixed; left:0; right:0; bottom:0; z-index:40;
@@ -683,4 +696,25 @@
     }
     .sticky-apply-wage{font-weight:700; font-size:15px; color:var(--navy);}
     .sticky-apply-bar .btn{flex-shrink:0;}
+  }
+
+  /* ============================================================
+     SEARCH & FILTERS — a text box plus horizontally-scrolling chip rows,
+     not a dense filter sidebar. .search-bar above is pre-existing (built
+     for the old hero search, unused since) — reused here rather than
+     styled twice.
+     ============================================================ */
+  .section > .search-bar{width:100%; max-width:none; margin:0 0 16px;}
+
+  .filter-chips{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+  .filter-chips::-webkit-scrollbar{display:none;}
+  .filter-chip{flex-shrink:0; padding:8px 14px; border-radius:20px; border:1px solid var(--border-strong); background:var(--paper); color:var(--text-dim); font-size:13px; font-weight:600; white-space:nowrap; transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);}
+  .filter-chip:hover{border-color:var(--navy);}
+  .filter-chip.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .filter-chip.filter-toggle.active{background:var(--teal-light); color:var(--teal); border-color:var(--teal);}
+
+  .search-result-count{font-size:13px; color:var(--text-dim); margin-bottom:16px;}
+
+  @media (max-width:460px){
+    .filter-chip{padding:7px 12px; font-size:12.5px;}
   }

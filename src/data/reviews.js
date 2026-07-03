@@ -12,8 +12,11 @@ export const REVIEWS_FOR_WORKER = [
   { id: 'r7', workerId: 'u_suresh', by: 'Local homeowner', role: 'Employer', job: 'JOB-2150', verified: true, overall: 4, cats: { 'Work quality': 4, Punctuality: 4, Communication: 5, 'Safety compliance': 4 }, comment: 'Fixed a tricky leak quickly and explained the issue clearly. Fair pricing.', date: '8 Jun' },
 ];
 
-// Reviews left for a hirer (contractor/employer) by workers.
+// Reviews left for a hirer (contractor/employer) by workers. hirerId ties a
+// review to a specific employer's public profile — same reasoning as
+// workerId above, mirrored for the other side of a job.
 export const REVIEWS_FOR_HIRER = [
-  { id: 'r4', by: 'Suresh Yadav', role: 'Worker · Plumber', job: 'JOB-2180', verified: true, overall: 5, cats: { 'Payment reliability': 5, 'Site safety': 5, Communication: 5, 'Fair treatment': 5 }, comment: 'Paid the same day as promised, proper safety gear on site.', date: '15 Jun' },
-  { id: 'r5', by: 'Vikram Singh', role: 'Worker · Electrician', job: 'JOB-2155', verified: true, overall: 3, cats: { 'Payment reliability': 3, 'Site safety': 4, Communication: 2, 'Fair treatment': 3 }, comment: 'Payment was 2 days late, otherwise site conditions were fine.', date: '30 May' },
+  { id: 'r4', hirerId: 'u_meena', by: 'Suresh Yadav', role: 'Worker · Plumber', job: 'JOB-2180', verified: true, overall: 5, cats: { 'Payment reliability': 5, 'Site safety': 5, Communication: 5, 'Fair treatment': 5 }, comment: 'Paid the same day as promised, proper safety gear on site.', date: '15 Jun' },
+  { id: 'r5', hirerId: 'u_apex', by: 'Vikram Singh', role: 'Worker · Electrician', job: 'JOB-2155', verified: true, overall: 3, cats: { 'Payment reliability': 3, 'Site safety': 4, Communication: 2, 'Fair treatment': 3 }, comment: 'Payment was 2 days late, otherwise site conditions were fine.', date: '30 May' },
+  { id: 'r8', hirerId: 'u_grand', by: 'Anita Devi', role: 'Worker · Painter', job: 'JOB-2276', verified: true, overall: 5, cats: { 'Payment reliability': 5, 'Site safety': 5, Communication: 4, 'Fair treatment': 5 }, comment: 'Well organized site, payment was on time and safety gear was provided.', date: '25 Jun' },
 ];

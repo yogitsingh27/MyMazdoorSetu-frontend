@@ -6,6 +6,8 @@ import { StatusPill, Stars } from '@/components/common/Rating';
 import { ReviewModal } from '@/components/common/Reviews';
 import { WORKER_RATING_CATS } from '@/data/reviews';
 import { useServiceData } from '@/hooks/useServiceData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { EmployerService } from '@/services';
 import PostJobModal from '@/components/job/PostJobModal';
 
@@ -77,8 +79,21 @@ export function EmployerJobsPage() {
 }
 
 export function EmployerApplicationsPage() {
-  const { data: apps, loading } = useServiceData(() => EmployerService.applications(), []);
+  const { user } = useAuth();
+  const { data: apps, loading, reload } = useServiceData(() => EmployerService.applications(user.id), [user.id]);
+  const toast = useToast();
+  const [busyId, setBusyId] = useState(null);
+
   if (loading) return <div><PageHead title="Applications" /><PageSkeleton stats={false} table /></div>;
+
+  const decide = async (app, decision) => {
+    setBusyId(app.id);
+    await EmployerService.decideApplication(app.id, decision);
+    toast(decision === 'accepted' ? `${app.applicantName} accepted — they've been notified` : `${app.applicantName} declined`, decision === 'accepted' ? 'success' : 'info');
+    setBusyId(null);
+    reload();
+  };
+
   return (
     <div>
       <PageHead title="Applications" desc="People who applied to your job postings." />
@@ -87,7 +102,7 @@ export function EmployerApplicationsPage() {
       ) : (
         <div className="card" style={{ padding: 0 }}>
           <table className="list">
-            <thead><tr><th>Applicant</th><th>Trade</th><th>Job</th><th>Status</th></tr></thead>
+            <thead><tr><th>Applicant</th><th>Trade</th><th>Job</th><th>Status</th><th></th></tr></thead>
             <tbody>
               {apps.map((a) => (
                 <tr key={a.id}>
@@ -95,6 +110,14 @@ export function EmployerApplicationsPage() {
                   <td>{a.trade}</td>
                   <td className="mono">{a.jobId}</td>
                   <td><StatusPill status={a.status} /></td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    {a.status === 'pending' && (
+                      <>
+                        <button className="btn-sm orange" disabled={busyId === a.id} onClick={() => decide(a, 'accepted')}>Accept</button>
+                        <button className="btn-sm muted" disabled={busyId === a.id} onClick={() => decide(a, 'rejected')}>Reject</button>
+                      </>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

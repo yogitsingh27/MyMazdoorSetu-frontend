@@ -7,5 +7,7 @@ export { AgentService } from './AgentService';
 export { AdminService } from './AdminService';
 export { NotificationService } from './NotificationService';
 export { ReviewService } from './ReviewService';
+export { ApplicationService } from './ApplicationService';
 export { MessageService } from './MessageService';
 export { ComplaintService } from './ComplaintService';
+export { IntentService } from './IntentService';

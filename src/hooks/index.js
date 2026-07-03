@@ -4,3 +4,5 @@ export { useToast } from '@/contexts/ToastContext';
 export { useNotifications } from '@/contexts/NotificationContext';
 export { useLanguage } from '@/contexts/LanguageContext';
 export { useServiceData } from './useServiceData';
+export { useIntentGate } from './useIntentGate';
+export { useIntentResumeToast } from './useIntentResumeToast';

@@ -27,3 +27,20 @@ export const COMMISSION_ROWS = [
 ];
 
 export const TRADES = ['Mason', 'Painter', 'Electrician', 'Plumber', 'Carpenter', 'Supervisor', 'Welder', 'Helper'];
+
+// Display labels for EmployerProfile.kind. This is real mock data (an
+// employer's category), not UI chrome, so it's a plain lookup map rather
+// than translation keys — same rule already applied to trade names.
+export const EMPLOYER_KIND_LABELS = {
+  homeowner: 'Homeowner',
+  builder: 'Builder',
+  company: 'Company',
+  society: 'Society',
+  factory: 'Factory',
+  hotel: 'Hotel',
+  shop: 'Shop',
+};
+
+// Canonical city list — the same four cities already named in the app's own
+// copy (FAQ, "Why MyMazdoorSetu"). Used to drive the city filter chips.
+export const CITIES = ['Delhi', 'Noida', 'Gurugram', 'Ghaziabad'];

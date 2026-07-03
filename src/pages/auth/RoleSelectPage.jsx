@@ -1,6 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
+import { IntentService } from '@/services';
 import { ROLE_META } from '@/types/roles';
 
 export default function RoleSelectPage() {
@@ -13,6 +14,10 @@ export default function RoleSelectPage() {
 
   const pick = (role) => {
     setActiveRole(role);
+    // Defensive: no intent type requires a specific role today (Login/Register
+    // already resume before ever reaching this page in that case), but this
+    // keeps the hand-off in place for the day one does — see config/intents.js.
+    if (IntentService.resume(navigate)) return;
     navigate(`/app/${role}`);
   };
 

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useServiceData } from '@/hooks/useServiceData';
-import { JobService } from '@/services';
+import { useServiceData, useIntentGate, useIntentResumeToast, useAuth } from '@/hooks';
+import { JobService, ApplicationService } from '@/services';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import Icon from '@/components/common/Icon';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import { USERS } from '@/data/users';
 import { JOBS } from '@/data/jobs';
+import { EMPLOYER_KIND_LABELS } from '@/data/companies';
 import { ROLE } from '@/types/roles';
 
 // Facilities are things the poster offers (distinct from requirements, which
@@ -28,14 +29,45 @@ function daysAgo(dateStr) {
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
+// StatusPill's labels are hardcoded English (dashboards aren't localized yet
+// — see docs/CHANGELOG.md). Job Detail is a fully bilingual public page, so
+// reusing StatusPill directly here would leak an English-only string into
+// the Hindi UI; this renders the same pill classes with a translated label
+// instead. (Same lesson as the earlier StatusPill prop-ignoring bug: don't
+// bend the shared component, use it for what it does and no more.)
+const PILL_CLASS = { pending: 'pill-pending', accepted: 'pill-resolved', rejected: 'pill-closed', withdrawn: 'pill-closed', active: 'pill-active', completed: 'pill-resolved', closed: 'pill-closed', open: 'pill-active' };
+function AppStatusPill({ status, t }) {
+  return <span className={`pill-status ${PILL_CLASS[status] || 'pill-closed'}`}>{t(`jobDetail.status.${status}`)}</span>;
+}
+
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const toast = useToast();
+  const gate = useIntentGate();
+  const { user, isAuthenticated } = useAuth();
+  useIntentResumeToast();
   const { data: job, loading } = useServiceData(() => JobService.get(id), [id]);
+  const { data: myApplication, loading: appLoading, reload: reloadApp } = useServiceData(
+    () => (isAuthenticated ? ApplicationService.find({ jobId: id, applicantId: user.id }) : Promise.resolve(null)),
+    [id, isAuthenticated, user?.id],
+  );
 
-  const applyNow = () => navigate('/register', { state: { preselectRole: ROLE.WORKER } });
+  const applyNow = () => gate(
+    { type: 'APPLY_JOB', payload: { jobId: id }, preselectRole: ROLE.WORKER },
+    async () => {
+      await ApplicationService.apply({ jobId: id, applicantId: user.id });
+      toast(t('jobDetail.applied'));
+      reloadApp();
+    },
+  );
+
+  const withdrawApplication = async () => {
+    await ApplicationService.withdraw(myApplication.id);
+    toast(t('jobDetail.withdrawn'), 'info');
+    reloadApp();
+  };
 
   const share = async () => {
     const url = window.location.href;
@@ -70,6 +102,16 @@ export default function JobDetail() {
   const similar = JOBS.filter((j) => j.id !== job.id && j.trade === job.trade && j.status === 'open').slice(0, 3);
   const days = daysAgo(job.postedAt);
 
+  // Only Employer-posted jobs have a public profile today (see EmployerDetail).
+  // A Contractor-as-poster public profile doesn't exist yet, so that case
+  // stays a plain, non-clickable card rather than a dead link.
+  const posterClickable = job.postedByRole === ROLE.EMPLOYER && !!poster;
+  const goToPoster = () => navigate(`/employers/${poster.id}`);
+  const posterKeyDown = (e) => {
+    if (!posterClickable) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToPoster(); }
+  };
+
   return (
     <>
       <section className="section job-detail">
@@ -92,12 +134,22 @@ export default function JobDetail() {
           </div>
 
           {poster && (
-            <div className="poster-card">
+            <div
+              className="poster-card"
+              role={posterClickable ? 'button' : undefined}
+              tabIndex={posterClickable ? 0 : undefined}
+              onClick={posterClickable ? goToPoster : undefined}
+              onKeyDown={posterKeyDown}
+              style={posterClickable ? { cursor: 'pointer' } : undefined}
+            >
               <Avatar name={posterName} color={poster.avatarColor} size={44} />
               <div className="poster-id">
                 <div className="poster-name">{posterName}</div>
                 <div className="poster-role">
                   {t(`roles.${job.postedByRole}.label`)}
+                  {poster.employerProfile?.kind && (
+                    <span className="roletag">{EMPLOYER_KIND_LABELS[poster.employerProfile.kind] || poster.employerProfile.kind}</span>
+                  )}
                   {poster.verified && <span className="verified-badge"><Icon name="check" size={11} /> {t('jobDetail.verified')}</span>}
                 </div>
               </div>
@@ -116,7 +168,20 @@ export default function JobDetail() {
           </div>
 
           <div className="job-detail-ctas">
-            <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+            {!isAuthenticated || appLoading ? (
+              <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+            ) : myApplication && myApplication.status !== 'withdrawn' ? (
+              <>
+                <AppStatusPill status={myApplication.status} t={t} />
+                {myApplication.status === 'pending' && (
+                  <button className="btn btn-outline job-detail-withdraw-inline" onClick={withdrawApplication}>{t('jobDetail.withdraw')}</button>
+                )}
+              </>
+            ) : job.status === 'open' ? (
+              <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+            ) : (
+              <AppStatusPill status={job.status} t={t} />
+            )}
             <button className="btn btn-outline" onClick={share}><Icon name="share" size={15} /> {t('jobDetail.shareJob')}</button>
           </div>
 
@@ -174,7 +239,17 @@ export default function JobDetail() {
 
       <div className="sticky-apply-bar">
         <div className="sticky-apply-wage mono">{job.wage}</div>
-        <button className="btn btn-primary" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+        {!isAuthenticated || appLoading ? (
+          <button className="btn btn-primary" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+        ) : myApplication && myApplication.status === 'pending' ? (
+          <button className="btn btn-outline" onClick={withdrawApplication}>{t('jobDetail.withdraw')}</button>
+        ) : myApplication && myApplication.status !== 'withdrawn' ? (
+          <AppStatusPill status={myApplication.status} t={t} />
+        ) : job.status === 'open' ? (
+          <button className="btn btn-primary" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+        ) : (
+          <AppStatusPill status={job.status} t={t} />
+        )}
       </div>
     </>
   );

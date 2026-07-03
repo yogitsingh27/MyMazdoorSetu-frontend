@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { IntentService } from '@/services';
 import { ROLE, ROLE_META, ROLE_ORDER } from '@/types/roles';
 
 // THE FIX (register side): the old form collapsed Contractor into "Worker /
@@ -32,6 +33,7 @@ export default function RegisterPage() {
     try {
       const user = await register({ name, phone, city, roles });
       toast('Account created — welcome to MyMazdoorSetu');
+      if (IntentService.resume(navigate)) return; // e.g. resuming an Apply/Contact click
       navigate(user.roles.length > 1 ? '/select-role' : `/app/${user.roles[0]}`);
     } finally {
       setBusy(false);

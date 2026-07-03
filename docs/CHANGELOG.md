@@ -109,13 +109,45 @@ Job listings previously had no page of their own — every "Apply" click led str
 
 ---
 
+## v0.4.0 – Worker Profiles (2026-07-02)
+
+### Overview
+Workers previously had no page of their own — browsing cards on the landing page or the Workers list had no click-through at all. This phase added a public Worker Profile page designed around a single question for the employer reading it: should I hire this worker? It reuses the trust-building patterns already proven in v0.1.0–v0.3.0 (ledger-style stats, public trust content with a gated contact action) rather than introducing new ones.
+
+### Added
+- A Worker Profile page (`/workers/:id`): identity header (avatar, name, trade, city, verification), live availability status, prominent "Completed Jobs" and "Years Experience" stats, skills, a portfolio grid, a Reviews section with a rating breakdown and a "reviewed after completed work" indicator on reviews tied to a real completed job, languages, a Similar Workers section (same trade), and a register/log-in banner.
+- "Contact Worker" as the primary action, inline plus a sticky mobile bar, mirroring the Job Detail page's pattern.
+- Two new mock reviews (Anita Devi, Suresh Yadav), so all three public-facing workers have at least one review to show instead of just one of them.
+- `ReviewService.forWorkerId(id)`.
+
+### Changed
+- Worker cards (`WorkerShowcaseCard`) are now clickable as a whole, wherever they're used as real listings (Landing's Featured Workers, the Workers browse page) — the same click-through pattern already used for job tickets, added by a prop rather than a second implementation.
+- Reviews now carry a `workerId`, so a review shows only on the profile it actually belongs to.
+
+### Fixed
+- No regressions were found in this sprint; verified via a production build and browser testing across both languages and mobile/desktop breakpoints.
+- Corrected a review-data gap before it shipped: `ReviewService.forWorker()` had no concept of *which* worker a review was about, so every public profile would have shown the same three reviews regardless of whose page it was. Fixed by attributing existing reviews to their worker and adding the missing ones.
+
+### Technical Notes
+- Worker Detail deliberately mirrors Job Detail's structure (single column, sticky mobile CTA, public route) rather than a second layout pattern.
+- The reviews shown here are rendered directly in the page rather than through the shared dashboard `ReviewCard` component, so the public page's copy ("reviewed after completed work") can be clearer than the dashboard's internal phrasing without changing what a logged-in worker sees on their own profile.
+- All profile content that builds trust (rating, portfolio, reviews, availability) stays public; only "Contact Worker" is gated behind registration/login, consistent with the rest of the site.
+
+### Known Limitations
+- Contacting a worker while logged out leads to generic registration; like the Job Detail apply flow, the specific worker isn't remembered and resumed afterward.
+- "Similar workers" matches by trade only, and with just three workers holding full profiles in the mock data, most profiles won't have anyone to show there yet.
+- Portfolio entries are still placeholder tiles, not real photos.
+
+---
+
 ## Upcoming
 
 Planned milestones, not yet started:
 
-- **Resume application after registration** — carry the specific job a worker tapped Apply on through sign-up, landing them back on that job (or a confirmation) instead of a generic post-signup screen.
+- **Resume intent after registration** — carry the specific job or worker someone tapped Apply/Contact on through sign-up, instead of a generic post-signup screen. Applies to both the Job Detail and Worker Profile flows.
 - **Dashboard localization** — extend English/Hindi translation to the authenticated dashboards, auth pages, and browse-page headings.
 - **Dashboard visual pass** — bring the design-system work from v0.1.0 to the authenticated experience, currently untouched.
 - **Search and filtering** — for the Jobs, Workers, and Projects browse pages, none of which currently support it.
+- **Expand the mock worker roster** — more workers with full profiles, so features like Similar Workers have something to show more often.
 - **Additional Indian languages** — the localization architecture supports adding a new language in a handful of lines; none beyond Hindi are planned yet.
 - **Real backend integration** — replacing the mock service layer with a live API, per the seam already documented in `services/http.js`.

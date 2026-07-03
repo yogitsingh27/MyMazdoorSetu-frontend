@@ -5,6 +5,7 @@ export const ReviewService = {
   async forWorker() { return respond(REVIEWS_FOR_WORKER); },
   async forWorkerId(id) { return respond(REVIEWS_FOR_WORKER.filter((r) => r.workerId === id)); },
   async forHirer() { return respond(REVIEWS_FOR_HIRER); },
+  async forHirerId(id) { return respond(REVIEWS_FOR_HIRER.filter((r) => r.hirerId === id)); },
   categoriesFor(kind) { return kind === 'worker' ? WORKER_RATING_CATS : HIRER_RATING_CATS; },
   async submit(review) { return respond({ id: `r_${Date.now()}`, ...review }); },
 };

@@ -6,17 +6,22 @@ import { StatusPill } from '@/components/common/Rating';
 import { ReviewModal } from '@/components/common/Reviews';
 import { HIRER_RATING_CATS } from '@/data/reviews';
 import { useServiceData } from '@/hooks/useServiceData';
+import { useAuth } from '@/contexts/AuthContext';
 import { WorkerService } from '@/services';
 import JobTicket from '@/components/job/JobTicket';
 import { useToast } from '@/contexts/ToastContext';
 
 export function BrowseJobsPage() {
+  const { user } = useAuth();
   const { data: jobs, loading } = useServiceData(() => WorkerService.nearbyJobs(), []);
   const toast = useToast();
 
   if (loading) return <div><PageHead title="Nearby jobs" /><PageSkeleton stats={false} /></div>;
 
-  const apply = (job) => toast(`Applied to ${job.title}`);
+  const apply = async (job) => {
+    await WorkerService.apply(job.id, user.id);
+    toast(`Applied to ${job.title}`);
+  };
 
   return (
     <div>
@@ -31,10 +36,21 @@ export function BrowseJobsPage() {
 }
 
 export function MyApplicationsPage() {
-  const { data: apps, loading } = useServiceData(() => WorkerService.myApplications(), []);
+  const { user } = useAuth();
+  const { data: apps, loading, reload } = useServiceData(() => WorkerService.myApplications(user.id), [user.id]);
   const [reviewTarget, setReviewTarget] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const toast = useToast();
 
   if (loading) return <div><PageHead title="My applications" /><PageSkeleton stats={false} table /></div>;
+
+  const withdraw = async (app) => {
+    setBusyId(app.id);
+    await WorkerService.withdrawApplication(app.id);
+    toast(`Application to ${app.jobTitle} withdrawn`, 'info');
+    setBusyId(null);
+    reload();
+  };
 
   return (
     <div>
@@ -48,9 +64,16 @@ export function MyApplicationsPage() {
             <tbody>
               {apps.map((a) => (
                 <tr key={a.id}>
-                  <td>{a.title}</td>
+                  <td>{a.jobTitle}</td>
                   <td><StatusPill status={a.status} /></td>
-                  <td>{a.status === 'active' && <button className="btn-sm orange" onClick={() => setReviewTarget('Apex Builders')}>Rate hirer</button>}</td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    {a.status === 'pending' && (
+                      <button className="btn-sm muted" disabled={busyId === a.id} onClick={() => withdraw(a)}>Withdraw</button>
+                    )}
+                    {a.status === 'accepted' && (
+                      <button className="btn-sm orange" onClick={() => setReviewTarget('Apex Builders')}>Rate hirer</button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

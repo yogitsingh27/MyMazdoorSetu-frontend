@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useServiceData } from '@/hooks/useServiceData';
+import { useServiceData, useIntentGate, useIntentResumeToast } from '@/hooks';
 import { ReviewService } from '@/services';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/contexts/ToastContext';
 import Icon from '@/components/common/Icon';
 import { Stars } from '@/components/common/Rating';
 import { RatingBars, avgOverall } from '@/components/common/Reviews';
@@ -17,11 +18,17 @@ export default function WorkerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const toast = useToast();
+  const gate = useIntentGate();
+  useIntentResumeToast();
 
   const worker = ALL_WORKERS.find((w) => w.id === id);
   const { data: reviews, loading: reviewsLoading } = useServiceData(() => ReviewService.forWorkerId(id), [id]);
 
-  const contactWorker = () => navigate('/register', { state: { preselectRole: ROLE.EMPLOYER } });
+  const contactWorker = () => gate(
+    { type: 'CONTACT_WORKER', payload: { workerId: id }, preselectRole: ROLE.EMPLOYER },
+    () => toast(t('intent.alreadyLoggedInContact')),
+  );
 
   if (!worker) {
     return (

@@ -19,6 +19,7 @@ import JobsBrowse from '@/pages/public/JobsBrowse';
 import JobDetail from '@/pages/public/JobDetail';
 import WorkersBrowse from '@/pages/public/WorkersBrowse';
 import WorkerDetail from '@/pages/public/WorkerDetail';
+import EmployerDetail from '@/pages/public/EmployerDetail';
 import ProjectsBrowse from '@/pages/public/ProjectsBrowse';
 // Auth
 import LoginPage from '@/pages/auth/LoginPage';
@@ -130,6 +131,7 @@ export default function App() {
         <Route path="/jobs/:id" element={<JobDetail />} />
         <Route path="/workers" element={<WorkersBrowse />} />
         <Route path="/workers/:id" element={<WorkerDetail />} />
+        <Route path="/employers/:id" element={<EmployerDetail />} />
         <Route path="/projects" element={<ProjectsBrowse />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

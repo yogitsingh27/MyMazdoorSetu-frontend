@@ -14,6 +14,26 @@ export default {
     logout: 'Logout',
   },
 
+  search: {
+    jobsHeading: 'Open jobs',
+    workersHeading: 'Verified workers on MyMazdoorSetu',
+    workersDesc: 'Masons, electricians, painters, plumbers, and more — verified and rated from real jobs across Delhi NCR.',
+    jobsPlaceholder: 'Search by trade, location, or keyword',
+    workersPlaceholder: 'Search by name, trade, skill, or location',
+    availableNow: 'Available now',
+    verifiedOnly: 'Verified only',
+    clearFilters: 'Clear filters',
+    resultsCountOne: '{{count}} result',
+    resultsCountOther: '{{count}} results',
+    noResultsTitle: 'No matches for these filters',
+    noResultsHint: 'Try a different trade or city, or clear your filters to see everything.',
+    noJobsTitle: 'No open jobs right now',
+    noJobsHint: 'Check back soon, or register to get notified when matching work is posted.',
+    noWorkersTitle: 'No verified workers yet',
+    noWorkersHint: 'Check back soon as more workers join and get verified.',
+    wantToContact: 'Want to contact or hire a worker directly?',
+  },
+
   footer: {
     tagline: "Connecting workers, contractors, and builders across Delhi NCR's construction industry — registered, verified, and dispute-free.",
     registerAs: 'Register as',
@@ -38,6 +58,9 @@ export default {
   jobDetail: {
     backToJobs: 'Back to jobs',
     applyNow: 'Apply Now',
+    applied: 'Application submitted.',
+    withdraw: 'Withdraw Application',
+    withdrawn: 'Application withdrawn.',
     shareJob: 'Share job',
     linkCopied: 'Link copied to clipboard',
     verified: 'Verified',
@@ -53,6 +76,23 @@ export default {
     wantToApply: 'Want to apply for this job?',
     notFound: "This job isn't available anymore",
     notFoundHint: 'It may have been filled or removed. Browse other open jobs instead.',
+    status: {
+      pending: 'Pending',
+      accepted: 'Accepted',
+      rejected: 'Not Selected',
+      withdrawn: 'Withdrawn',
+      open: 'Open',
+      active: 'Active',
+      completed: 'Completed',
+      closed: 'Closed',
+    },
+  },
+
+  intent: {
+    resumedApplyJob: "You're logged in — go ahead and apply.",
+    resumedContactWorker: "You're logged in — go ahead and contact this worker.",
+    alreadyLoggedInApply: "You're logged in — you can apply from your dashboard.",
+    alreadyLoggedInContact: "You're logged in — you can contact workers from your dashboard.",
   },
 
   workerDetail: {
@@ -70,6 +110,23 @@ export default {
     booked: 'Booked',
     notFound: "This worker profile isn't available",
     notFoundHint: 'They may no longer be active on the platform. Browse other verified workers instead.',
+  },
+
+  employerDetail: {
+    back: 'Back',
+    trustHeading: 'How workers rate this employer',
+    noReviewsYet: 'No reviews yet.',
+    jobsPosted: 'Jobs Posted',
+    currentlyHiring: 'Currently Hiring',
+    notHiring: 'Not Currently Hiring',
+    viewOpenJobs: 'View Open Jobs',
+    openJobs: 'Open Jobs',
+    noOpenJobs: 'No open jobs right now',
+    noOpenJobsHint: "This employer isn't hiring at the moment. Browse other open jobs instead.",
+    reviews: 'Reviews',
+    wantToApply: 'Want to apply for a job with this employer?',
+    notFound: "This employer profile isn't available",
+    notFoundHint: 'They may no longer be active on the platform. Browse open jobs instead.',
   },
 
   landing: {

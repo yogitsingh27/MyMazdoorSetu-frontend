@@ -10,6 +10,9 @@ export function StatusPill({ status }) {
     pending: ['pill-pending', 'Pending'],
     completed: ['pill-resolved', 'Completed'],
     paid: ['pill-resolved', 'Paid'],
+    accepted: ['pill-resolved', 'Accepted'],
+    rejected: ['pill-closed', 'Not Selected'],
+    withdrawn: ['pill-closed', 'Withdrawn'],
   };
   const [klass, label] = map[status] || ['pill-closed', status];
   return <span className={cn('pill-status', klass)}>{label}</span>;

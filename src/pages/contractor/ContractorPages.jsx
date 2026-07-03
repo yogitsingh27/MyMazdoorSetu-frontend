@@ -6,6 +6,7 @@ import { StatusPill, Stars } from '@/components/common/Rating';
 import { ReviewModal } from '@/components/common/Reviews';
 import { WORKER_RATING_CATS } from '@/data/reviews';
 import { useServiceData } from '@/hooks/useServiceData';
+import { useAuth } from '@/contexts/AuthContext';
 import { ContractorService } from '@/services';
 import { useToast } from '@/contexts/ToastContext';
 import PostJobModal from '@/components/job/PostJobModal';
@@ -46,7 +47,8 @@ export function ContractorJobsPage() {
 }
 
 export function ApplicantsPage() {
-  const { data: apps, loading, reload } = useServiceData(() => ContractorService.applicants(), []);
+  const { user } = useAuth();
+  const { data: apps, loading, reload } = useServiceData(() => ContractorService.applicants(user.id), [user.id]);
   const toast = useToast();
   const [busyId, setBusyId] = useState(null);
 
@@ -54,9 +56,8 @@ export function ApplicantsPage() {
 
   const decide = async (app, decision) => {
     setBusyId(app.id);
-    // Mock services don't persist this mutation server-side yet — optimistic
-    // local update plus a real service call shape ready for the API.
-    toast(decision === 'accept' ? `${app.applicantName} accepted — they've been notified` : `${app.applicantName} declined`, decision === 'accept' ? 'success' : 'info');
+    await ContractorService.decideApplication(app.id, decision);
+    toast(decision === 'accepted' ? `${app.applicantName} accepted — they've been notified` : `${app.applicantName} declined`, decision === 'accepted' ? 'success' : 'info');
     setBusyId(null);
     reload();
   };
@@ -80,8 +81,8 @@ export function ApplicantsPage() {
                   <td style={{ display: 'flex', gap: 6 }}>
                     {a.status === 'pending' && (
                       <>
-                        <button className="btn-sm orange" disabled={busyId === a.id} onClick={() => decide(a, 'accept')}>Accept</button>
-                        <button className="btn-sm muted" disabled={busyId === a.id} onClick={() => decide(a, 'reject')}>Reject</button>
+                        <button className="btn-sm orange" disabled={busyId === a.id} onClick={() => decide(a, 'accepted')}>Accept</button>
+                        <button className="btn-sm muted" disabled={busyId === a.id} onClick={() => decide(a, 'rejected')}>Reject</button>
                       </>
                     )}
                   </td>

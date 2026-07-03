@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { IntentService } from '@/services';
 import { DEMO_ACCOUNTS } from '@/data/users';
 
 // THE FIX: role is no longer a dropdown the user pre-selects. It comes
@@ -22,6 +23,7 @@ export default function LoginPage() {
     try {
       const user = await login(phone);
       toast(`Welcome back, ${user.name.split(' ')[0]}`);
+      if (IntentService.resume(navigate)) return; // e.g. resuming an Apply/Contact click
       // Single role -> straight to that dashboard. Multiple -> role selector.
       navigate(user.roles.length > 1 ? '/select-role' : `/app/${user.roles[0]}`);
     } catch (err) {
