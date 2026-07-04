@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { IntentService } from '@/services';
 import { ROLE, ROLE_META, ROLE_ORDER } from '@/types/roles';
 
 // THE FIX (register side): the old form collapsed Contractor into "Worker /
@@ -16,7 +15,9 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
+  const [password, setPassword] = useState('');
   const [roles, setRoles] = useState(preselect && SELECTABLE_ROLES.includes(preselect) ? [preselect] : [ROLE.WORKER]);
+  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const { register } = useAuth();
   const toast = useToast();
@@ -29,12 +30,17 @@ export default function RegisterPage() {
   const submit = async (e) => {
     e.preventDefault();
     if (roles.length === 0) return;
+    setError('');
     setBusy(true);
     try {
-      const user = await register({ name, phone, city, roles });
-      toast('Account created — welcome to MyMazdoorSetu');
-      if (IntentService.resume(navigate)) return; // e.g. resuming an Apply/Contact click
-      navigate(user.roles.length > 1 ? '/select-role' : `/app/${user.roles[0]}`);
+      // Registration does NOT auto-log-in (backend returns 201 with no tokens).
+      // Send the user to the login page; any pending intent (Apply/Contact) is
+      // preserved and resumes after they log in.
+      await register({ name, phone, city, roles, password });
+      toast('Account created — please log in to continue');
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -54,9 +60,13 @@ export default function RegisterPage() {
               <label htmlFor="phone">Phone number</label>
               <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98200-12233" />
             </div>
-            <div className="field full">
+            <div className="field">
               <label htmlFor="city">City</label>
               <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Delhi" />
+            </div>
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
             </div>
           </div>
 
@@ -84,6 +94,8 @@ export default function RegisterPage() {
               You can add more roles later from your profile — one account, no need to re-register.
             </p>
           </div>
+
+          {error && <p style={{ color: 'var(--rose)', fontSize: 13, marginTop: 12 }}>{error}</p>}
 
           <button className="btn btn-primary" type="submit" disabled={busy || roles.length === 0}
             style={{ width: '100%', justifyContent: 'center', marginTop: 18 }}>

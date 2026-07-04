@@ -10,18 +10,24 @@ import { DEMO_ACCOUNTS } from '@/data/users';
 // reads `user.roles`, not a guessed/defaulted value.
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const { login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
+  const fillDemo = (d) => {
+    setPhone(d.phone);
+    setPassword('Password1'); // dev seed password (see backend SeedData docs)
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
-      const user = await login(phone);
+      const user = await login(phone, password);
       toast(`Welcome back, ${user.name.split(' ')[0]}`);
       if (IntentService.resume(navigate)) return; // e.g. resuming an Apply/Contact click
       // Single role -> straight to that dashboard. Multiple -> role selector.
@@ -42,6 +48,10 @@ export default function LoginPage() {
             <label htmlFor="phone">Phone number</label>
             <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98200-12233" autoFocus />
           </div>
+          <div className="field full" style={{ marginTop: 12 }}>
+            <label htmlFor="password">Password</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+          </div>
           {error && <p style={{ color: 'var(--rose)', fontSize: 13, marginTop: 8 }}>{error}</p>}
           <button className="btn btn-primary" type="submit" disabled={busy} style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
             {busy ? 'Checking…' : 'Continue'}
@@ -54,7 +64,7 @@ export default function LoginPage() {
           </div>
           {DEMO_ACCOUNTS.map((d) => (
             <button key={d.phone} type="button" className="btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
-              onClick={() => setPhone(d.phone)}>
+              onClick={() => fillDemo(d)}>
               {d.phone} — {d.label}
             </button>
           ))}

@@ -63,6 +63,55 @@ The JWT carries `sub` (user id), `name`, and one `role` claim per held role (Pas
 
 ---
 
+## Hiring workflow (authenticated writes)
+
+All identity/ownership comes from the JWT `sub` — **no endpoint accepts a user id**. Rules and
+state machines are in `docs/JOB_WORKFLOW.md`; worked examples in `docs/WORKFLOW_EXAMPLES.md`.
+
+| Method | Route | Auth | Purpose | Success |
+|---|---|---|---|---|
+| POST | `/api/v1/jobs` | Employer\|Contractor | Create a job (`Open`) | `201` + `Location` |
+| POST | `/api/v1/jobs/{code}/close` | poster | Open → Closed | `200` |
+| POST | `/api/v1/jobs/{code}/complete` | poster | **Closed → Completed** | `200` |
+| POST | `/api/v1/jobs/{code}/applications` | Worker | Apply (or reactivate withdrawn) | `201` / `200` |
+| POST | `/api/v1/applications/{id}/withdraw` | applicant | Pending → Withdrawn | `200` |
+| POST | `/api/v1/applications/{id}/accept` | poster | Pending → Accepted (decrements openings) | `200` |
+| POST | `/api/v1/applications/{id}/reject` | poster | Pending → Rejected | `200` |
+| GET | `/api/v1/me/applications` | Worker | My applications | `200` |
+| GET | `/api/v1/me/posted-jobs` | Employer\|Contractor | My jobs + application counts | `200` |
+| GET | `/api/v1/jobs/{code}/applications` | poster | Applicants for a job | `200` |
+
+**Create job** — body `{ title, trade, wage, location, duration, description, openings (≥1), postedAsRole, tags?[], requirements?[] }`. `trade` must exist in the seeded trades; `postedAsRole` (`employer`/`contractor`) must be a role the caller holds. Returns `JobDto`.
+
+```
+POST /api/v1/jobs   (Bearer)
+{ "title":"Wall plastering, 2BHK", "trade":"Mason", "wage":"₹800/day",
+  "location":"Dwarka, Delhi", "duration":"5 days", "description":"…",
+  "openings":2, "postedAsRole":"employer", "tags":["Meals included"], "requirements":["2+ years"] }
+→ 201  { "code":"JOB-2334", "title":"…", "trade":"Mason", "status":"open", "openings":2,
+         "postedByRole":"employer", "postedAt":"…Z", "tags":[…], "requirements":[…] }
+```
+
+**Apply** — no body. `201` for a new application, **`200` when a withdrawn one is reactivated in place** (same `id`). Returns the worker's `MyApplicationDto { id, jobCode, jobTitle, trade, wage, jobStatus, status, appliedAt, decidedAt?, updatedAt }`.
+
+**Accept / Reject** — no body; return the poster's `ApplicantDto { id, jobCode, jobTitle, postedByRole, status, appliedAt, decidedAt?, updatedAt, applicant:{ id, name, trade?, rating } }`. **Accept decrements `openings`**; the job is not auto-closed.
+
+**Write error codes**
+
+| Code | HTTP | When |
+|---|---|---|
+| `request.invalid` | 400 | invalid body / `postedAsRole` not held / unknown trade |
+| `job.forbidden` / `application.forbidden` | 403 | caller is not the owner |
+| `job.not_found` / `application.not_found` | 404 | no such job / application |
+| `job.invalid_transition` | 409 | illegal job state change (e.g. Complete before Close) |
+| `job.not_open` | 409 | applying to a non-open job |
+| `application.already_applied` | 409 | duplicate / re-apply after a decision |
+| `application.not_pending` | 409 | withdraw/accept/reject on a non-pending application |
+| `application.self_apply` | 409 | applying to a job you posted |
+| `application.job_completed` | 409 | accept/reject once the job is Completed |
+
+---
+
 ## 1. Browse jobs
 
 | | |

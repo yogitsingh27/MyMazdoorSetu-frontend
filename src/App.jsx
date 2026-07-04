@@ -4,6 +4,7 @@ import PublicLayout from '@/layouts/PublicLayout';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import RequireAuth from '@/router/RequireAuth';
 import RoleRoute from '@/router/RoleRoute';
+import RouteLoading from '@/router/RouteLoading';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -113,8 +114,9 @@ function ProfileRoute() {
 
 /* /app with no role → send the user to the right place. */
 function AppIndex() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, initializing } = useAuth();
   const { activeRole } = useRole();
+  if (initializing) return <RouteLoading />; // wait for session restore before deciding
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user.roles.length > 1 && !activeRole) return <Navigate to="/select-role" replace />;
   return <Navigate to={`/app/${activeRole || user.roles[0]}`} replace />;

@@ -3,6 +3,7 @@ import { Navigate, useParams, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { isRole } from '@/types/roles';
+import RouteLoading from '@/router/RouteLoading';
 
 /**
  * Guards /app/:role/* — this is the structural fix for "Worker should never
@@ -17,7 +18,7 @@ import { isRole } from '@/types/roles';
  */
 export default function RoleRoute() {
   const { role } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, initializing } = useAuth();
   const { activeRole, setActiveRole } = useRole();
 
   const validRole = isAuthenticated && isRole(role) && user.roles.includes(role);
@@ -26,6 +27,7 @@ export default function RoleRoute() {
     if (validRole && activeRole !== role) setActiveRole(role);
   }, [validRole, role, activeRole, setActiveRole]);
 
+  if (initializing) return <RouteLoading />; // wait for session restore before deciding
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!validRole) return <Navigate to={`/app/${user.roles[0]}`} replace />;
 

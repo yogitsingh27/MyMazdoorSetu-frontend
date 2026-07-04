@@ -39,6 +39,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<JobReadService>();
 builder.Services.AddScoped<WorkerReadService>();
 builder.Services.AddScoped<EmployerReadService>();
+builder.Services.AddScoped<MazdoorSetu.Api.Features.Jobs.JobWriteService>();
+builder.Services.AddScoped<MazdoorSetu.Api.Features.Applications.ApplicationWriteService>();
 
 // --- Authentication & authorization ---
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
