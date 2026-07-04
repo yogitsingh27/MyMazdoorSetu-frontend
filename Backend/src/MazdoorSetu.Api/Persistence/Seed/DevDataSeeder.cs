@@ -1,5 +1,6 @@
 using MazdoorSetu.Core.Entities;
 using MazdoorSetu.Core.Enums;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace MazdoorSetu.Api.Persistence.Seed;
@@ -298,6 +299,15 @@ public static class DevDataSeeder
                 VerifiedAt = Ago(60),
             });
             vi++;
+        }
+
+        // Give every seed user a known dev-only password ("Password1") and an
+        // active account so demo login works. Never used in production.
+        var hasher = new PasswordHasher<User>();
+        foreach (var u in users)
+        {
+            u.Status = AccountStatus.Active;
+            u.PasswordHash = hasher.HashPassword(u, "Password1");
         }
 
         db.Users.AddRange(users);

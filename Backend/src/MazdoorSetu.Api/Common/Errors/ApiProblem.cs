@@ -10,6 +10,12 @@ public static class ApiProblem
 
     public static ObjectResult BadRequest(string code, string detail) => Build(400, "Bad Request", code, detail);
 
+    public static ObjectResult Unauthorized(string code, string detail) => Build(401, "Unauthorized", code, detail);
+
+    public static ObjectResult Forbidden(string code, string detail) => Build(403, "Forbidden", code, detail);
+
+    public static ObjectResult Conflict(string code, string detail) => Build(409, "Conflict", code, detail);
+
     private static ObjectResult Build(int status, string title, string code, string detail)
     {
         var problem = new ProblemDetails { Status = status, Title = title, Detail = detail };

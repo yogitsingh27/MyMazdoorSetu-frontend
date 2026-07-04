@@ -1,7 +1,8 @@
-# MyMazdoorSetu API — Public Read Endpoints (Phase 1)
+# MyMazdoorSetu API
 
-Source of truth for the public, read-only endpoints. All endpoints are anonymous
-(no authentication) and side-effect free.
+Source of truth for the HTTP API. The **public read** endpoints (sections 1–5) are
+anonymous and side-effect free. The **authentication** endpoints are documented below;
+full architecture is in `docs/AUTHENTICATION.md` and security rationale in `docs/SECURITY.md`.
 
 ## Conventions
 
@@ -12,6 +13,53 @@ Source of truth for the public, read-only endpoints. All endpoints are anonymous
 - **Derived fields** (`rating`, `posterRating`, `reviewCount`, `jobsDone`, `jobsPosted`, `currentlyHiring`) are computed on read from reviews / applications; they are never stored. A subject with no reviews has `rating: 0`.
 - **Errors** use RFC 7807 `application/problem+json` with a machine-readable `code` (see [Error format](#error-format)).
 - **CORS:** the dev origin `http://localhost:5173` is allowed.
+
+---
+
+## Authentication
+
+Phone + password. Login issues a short-lived JWT **access token** (Bearer, ~30 min, sent in
+the response body) plus a rotating **refresh token** delivered as an httpOnly cookie
+(`mms_rt`, `Path=/api/v1/auth`). **Registration creates the account only — no tokens**; the
+client then logs in. `register`/`login`/`refresh` are rate-limited per IP (429 `auth.rate_limited`).
+
+| Method | Route | Auth | Purpose | Success | Error codes |
+|---|---|---|---|---|---|
+| POST | `/api/v1/auth/register` | anon | Create account (no tokens) | `201` | 400 `request.invalid`, 409 `auth.phone_taken` |
+| POST | `/api/v1/auth/login` | anon | Issue access token + refresh cookie | `200` | 400 `request.invalid`, 401 `auth.invalid_credentials`, 403 `auth.account_inactive` |
+| POST | `/api/v1/auth/refresh` | refresh cookie | Rotate refresh + mint new access token | `200` | 401 `auth.invalid_refresh` |
+| POST | `/api/v1/auth/logout` | refresh cookie | Revoke the refresh token | `204` | — |
+| GET | `/api/v1/auth/me` | Bearer | Current authenticated user | `200` | 401 |
+
+**Register** — body `{ name, phone, city, password (≥8), roles[] }`; `roles` ⊆ `["worker","contractor","employer","agent"]` (admin is rejected). Returns `{ "id": "<guid>" }`.
+
+```
+POST /api/v1/auth/register
+{ "name": "Asha Rani", "phone": "90000-12345", "city": "Delhi", "password": "Password1", "roles": ["worker"] }
+→ 201  { "id": "…" }
+```
+
+**Login** — body `{ phone, password }`. Returns `AuthResponse` and sets the `mms_rt` cookie.
+
+```
+POST /api/v1/auth/login
+{ "phone": "98200-12233", "password": "Password1" }
+→ 200
+{
+  "accessToken": "<jwt>", "tokenType": "Bearer", "expiresAtUtc": "2026-07-04T…Z",
+  "user": { "id": "…", "name": "Ramesh Kumar", "phone": "98200-12233", "city": "Delhi",
+            "avatarColor": "amber", "isVerified": true, "status": "active",
+            "roles": ["worker","contractor"],
+            "profiles": { "worker": true, "contractor": true, "employer": false, "agent": false } }
+}
+Set-Cookie: mms_rt=…; HttpOnly; SameSite=Lax; Path=/api/v1/auth
+```
+
+**Refresh** — send the `mms_rt` cookie (no body). Returns a new `AuthResponse`, rotates the cookie, and revokes the presented token. **Reusing a revoked/rotated token returns `401`.**
+
+**Me** — `Authorization: Bearer <accessToken>` → the `MeDto` (same `user` shape as the login response).
+
+The JWT carries `sub` (user id), `name`, and one `role` claim per held role (PascalCase, e.g. `Worker`) — supporting multi-role accounts via `[Authorize(Roles="…")]`.
 
 ---
 

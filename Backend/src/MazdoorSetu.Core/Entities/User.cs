@@ -1,3 +1,5 @@
+using MazdoorSetu.Core.Enums;
+
 namespace MazdoorSetu.Core.Entities;
 
 public class User
@@ -7,7 +9,13 @@ public class User
     public string Name { get; set; } = null!;
     public string City { get; set; } = null!;
     public string AvatarColor { get; set; } = null!;
-    public bool IsVerified { get; set; }
+    public bool IsVerified { get; set; }        // govt-ID (KYC) verification — distinct from account status
+
+    // Password authentication (nullable: future OTP-only accounts have no password).
+    public string? PasswordHash { get; set; }
+
+    // Account lifecycle for moderation/suspension.
+    public AccountStatus Status { get; set; }
 
     public ICollection<UserRole> Roles { get; set; } = new List<UserRole>();
     public ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();

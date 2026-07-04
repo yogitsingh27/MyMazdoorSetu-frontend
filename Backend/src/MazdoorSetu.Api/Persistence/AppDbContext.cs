@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<ReviewCategoryScore> ReviewCategoryScores => Set<ReviewCategoryScore>();
     public DbSet<VerificationRecord> VerificationRecords => Set<VerificationRecord>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
