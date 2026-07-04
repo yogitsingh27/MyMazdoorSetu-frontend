@@ -21,11 +21,6 @@ C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\M
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\MazdoorSetu.Api.sourcelink.json
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.development.json
-C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets\msbuild.MazdoorSetu.Api.Microsoft.AspNetCore.StaticWebAssets.props
-C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets\msbuild.build.MazdoorSetu.Api.props
-C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.MazdoorSetu.Api.props
-C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.MazdoorSetu.Api.props
-C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.pack.json
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\scopedcss\bundle\MazdoorSetu.Api.styles.css
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\MazdoorS.7323AB76.Up2Date
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\MazdoorSetu.Api.dll
@@ -150,3 +145,11 @@ C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\bin\Debug\net8.0\M
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\bin\Debug\net8.0\Microsoft.Bcl.Cryptography.dll
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\bin\Debug\net8.0\System.Formats.Asn1.dll
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\bin\Debug\net8.0\MazdoorSetu.Api.staticwebassets.endpoints.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\swae.build.ex.cache

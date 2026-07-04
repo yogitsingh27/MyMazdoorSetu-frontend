@@ -64,6 +64,25 @@ export function mapJobDetail(dto) {
   };
 }
 
+// Backend MyApplicationDto (a worker's own application) -> the flat shape the
+// existing worker pages consume. `jobId` mirrors `jobCode` because the frontend
+// keys jobs by their code.
+export function mapMyApplication(dto) {
+  return {
+    id: dto.id,
+    jobId: dto.jobCode,
+    jobCode: dto.jobCode,
+    jobTitle: dto.jobTitle,
+    trade: dto.trade,
+    wage: dto.wage,
+    jobStatus: dto.jobStatus,
+    status: dto.status,
+    appliedAt: dto.appliedAt,
+    decidedAt: dto.decidedAt ?? null,
+    updatedAt: dto.updatedAt,
+  };
+}
+
 export function mapReview(dto) {
   return {
     id: dto.id,

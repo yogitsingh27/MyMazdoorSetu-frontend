@@ -1,7 +1,8 @@
-import { respond, fail } from './http';
+import { respond, fail, request, USE_API } from './http';
 import { APPLICATIONS } from '@/data/applications';
 import { JOBS } from '@/data/jobs';
 import { USERS } from '@/data/users';
+import { mapMyApplication } from './mappers';
 
 function now() { return new Date().toISOString(); }
 
@@ -20,6 +21,13 @@ function nextId() {
 export const ApplicationService = {
   /** Create a new application, or reactivate a withdrawn one. Idempotent for an existing pending/accepted/rejected application. */
   async apply({ jobId, applicantId }) {
+    if (USE_API) {
+      // Identity comes from the JWT (the applicant is the authenticated worker);
+      // `applicantId` is ignored in API mode. 201 = new, 200 = withdrawn row
+      // reactivated — both return the application DTO, handled identically here.
+      const dto = await request(`/jobs/${encodeURIComponent(jobId)}/applications`, { method: 'POST' });
+      return mapMyApplication(dto);
+    }
     const job = JOBS.find((j) => j.id === jobId);
     if (!job || job.status !== 'open') return fail('This job is no longer open.');
 
@@ -42,6 +50,10 @@ export const ApplicationService = {
 
   /** Worker withdraws their own application. Only valid while pending. */
   async withdraw(applicationId) {
+    if (USE_API) {
+      const dto = await request(`/applications/${encodeURIComponent(applicationId)}/withdraw`, { method: 'POST' });
+      return mapMyApplication(dto);
+    }
     const app = APPLICATIONS.find((a) => a.id === applicationId);
     if (!app || app.status !== 'pending') return fail('This application can no longer be withdrawn.');
     app.status = 'withdrawn';
@@ -61,12 +73,24 @@ export const ApplicationService = {
 
   /** The current user's application to a specific job, or null — powers the Job Detail CTA state. */
   async find({ jobId, applicantId }) {
+    if (USE_API) {
+      // No dedicated "my application for job X" endpoint: fetch my applications
+      // (which include withdrawn rows) and match by job code. Only called for
+      // Worker-role users, so the Worker-gated endpoint is never hit by others.
+      const list = await request('/me/applications');
+      const dto = list.find((a) => a.jobCode === jobId);
+      return dto ? mapMyApplication(dto) : null;
+    }
     const app = APPLICATIONS.find((a) => a.jobId === jobId && a.applicantId === applicantId);
     return respond(app ? { ...app } : null);
   },
 
   /** A worker's own applications, enriched with job details for display. */
   async forApplicant(applicantId) {
+    if (USE_API) {
+      const list = await request('/me/applications');
+      return list.map(mapMyApplication);
+    }
     const enriched = APPLICATIONS.filter((a) => a.applicantId === applicantId).map((a) => {
       const job = JOBS.find((j) => j.id === a.jobId);
       return { ...a, jobTitle: job?.title ?? a.jobId, trade: job?.trade, wage: job?.wage };

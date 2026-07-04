@@ -3,6 +3,7 @@ import { JOBS } from '@/data/jobs';
 import { REVIEWS_FOR_WORKER } from '@/data/reviews';
 import { ALL_WORKERS } from '@/data/showcase';
 import { ApplicationService } from './ApplicationService';
+import { JobService } from './JobService';
 import { mapWorkerSummary, mapWorkerDetail } from './mappers';
 
 // Each filter key maps to a builder that takes the filter's value and
@@ -39,8 +40,16 @@ function enrichMockWorker(w) {
 }
 
 export const WorkerService = {
-  // --- dashboard / internal (mock) ---
-  async nearbyJobs() { return respond(JOBS.filter((j) => j.status === 'open')); },
+  // --- dashboard / internal ---
+  // Nearby jobs = the open-jobs feed. In API mode this comes from the real
+  // /jobs endpoint so the codes are valid targets for Apply (see Phase 2 in
+  // docs/FRONTEND_WRITE_INTEGRATION.md); mock otherwise.
+  async nearbyJobs() {
+    if (USE_API) return JobService.search({});
+    return respond(JOBS.filter((j) => j.status === 'open'));
+  },
+  // apply / withdraw / myApplications delegate to ApplicationService, which is
+  // API-backed in API mode and mock otherwise — no branch needed here.
   async myApplications(applicantId) { return ApplicationService.forApplicant(applicantId); },
   async apply(jobId, applicantId) { return ApplicationService.apply({ jobId, applicantId }); },
   async withdrawApplication(applicationId) { return ApplicationService.withdraw(applicationId); },

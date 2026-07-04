@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useServiceData, useIntentGate, useIntentResumeToast, useAuth } from '@/hooks';
 import { JobService, ApplicationService } from '@/services';
@@ -38,6 +39,17 @@ function AppStatusPill({ status, t }) {
   return <span className={`pill-status ${PILL_CLASS[status] || 'pill-closed'}`}>{t(`jobDetail.status.${status}`)}</span>;
 }
 
+// Map a backend ProblemDetails `code` to a localized message key. Anything
+// unrecognized falls back to a generic message.
+const APPLY_ERROR_KEYS = {
+  'application.already_applied': 'jobDetail.applyErrorAlready',
+  'job.not_open': 'jobDetail.applyErrorNotOpen',
+  'application.self_apply': 'jobDetail.applyErrorSelf',
+};
+const applyErrorKey = (err) => APPLY_ERROR_KEYS[err?.code] || 'jobDetail.applyErrorGeneric';
+const withdrawErrorKey = (err) =>
+  err?.code === 'application.not_pending' ? 'jobDetail.withdrawErrorNotPending' : 'jobDetail.withdrawErrorGeneric';
+
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -45,26 +57,45 @@ export default function JobDetail() {
   const toast = useToast();
   const gate = useIntentGate();
   const { user, isAuthenticated } = useAuth();
+  const [busy, setBusy] = useState(false);
   useIntentResumeToast();
   const { data: job, loading } = useServiceData(() => JobService.get(id), [id]);
+  // The application CTA only concerns workers. Gating the fetch on the Worker
+  // role keeps non-workers (e.g. an employer browsing) from hitting the
+  // Worker-only /me/applications endpoint (which would 403).
+  const isWorker = isAuthenticated && !!user?.roles?.includes(ROLE.WORKER);
   const { data: myApplication, loading: appLoading, reload: reloadApp } = useServiceData(
-    () => (isAuthenticated ? ApplicationService.find({ jobId: id, applicantId: user.id }) : Promise.resolve(null)),
-    [id, isAuthenticated, user?.id],
+    () => (isWorker ? ApplicationService.find({ jobId: id, applicantId: user.id }) : Promise.resolve(null)),
+    [id, isWorker, user?.id],
   );
 
   const applyNow = () => gate(
     { type: 'APPLY_JOB', payload: { jobId: id }, preselectRole: ROLE.WORKER },
     async () => {
-      await ApplicationService.apply({ jobId: id, applicantId: user.id });
-      toast(t('jobDetail.applied'));
-      reloadApp();
+      setBusy(true);
+      try {
+        await ApplicationService.apply({ jobId: id, applicantId: user.id });
+        toast(t('jobDetail.applied'));
+      } catch (err) {
+        toast(t(applyErrorKey(err)), 'error');
+      } finally {
+        setBusy(false);
+        reloadApp(); // server-confirmed: re-sync CTA state from the backend
+      }
     },
   );
 
   const withdrawApplication = async () => {
-    await ApplicationService.withdraw(myApplication.id);
-    toast(t('jobDetail.withdrawn'), 'info');
-    reloadApp();
+    setBusy(true);
+    try {
+      await ApplicationService.withdraw(myApplication.id);
+      toast(t('jobDetail.withdrawn'), 'info');
+    } catch (err) {
+      toast(t(withdrawErrorKey(err)), 'error');
+    } finally {
+      setBusy(false);
+      reloadApp();
+    }
   };
 
   const share = async () => {
@@ -167,16 +198,16 @@ export default function JobDetail() {
 
           <div className="job-detail-ctas">
             {!isAuthenticated || appLoading ? (
-              <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+              <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow} disabled={busy}>{t('jobDetail.applyNow')}</button>
             ) : myApplication && myApplication.status !== 'withdrawn' ? (
               <>
                 <AppStatusPill status={myApplication.status} t={t} />
                 {myApplication.status === 'pending' && (
-                  <button className="btn btn-outline job-detail-withdraw-inline" onClick={withdrawApplication}>{t('jobDetail.withdraw')}</button>
+                  <button className="btn btn-outline job-detail-withdraw-inline" onClick={withdrawApplication} disabled={busy}>{t('jobDetail.withdraw')}</button>
                 )}
               </>
             ) : job.status === 'open' ? (
-              <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+              <button className="btn btn-primary job-detail-apply-inline" onClick={applyNow} disabled={busy}>{t('jobDetail.applyNow')}</button>
             ) : (
               <AppStatusPill status={job.status} t={t} />
             )}
@@ -238,13 +269,13 @@ export default function JobDetail() {
       <div className="sticky-apply-bar">
         <div className="sticky-apply-wage mono">{job.wage}</div>
         {!isAuthenticated || appLoading ? (
-          <button className="btn btn-primary" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+          <button className="btn btn-primary" onClick={applyNow} disabled={busy}>{t('jobDetail.applyNow')}</button>
         ) : myApplication && myApplication.status === 'pending' ? (
-          <button className="btn btn-outline" onClick={withdrawApplication}>{t('jobDetail.withdraw')}</button>
+          <button className="btn btn-outline" onClick={withdrawApplication} disabled={busy}>{t('jobDetail.withdraw')}</button>
         ) : myApplication && myApplication.status !== 'withdrawn' ? (
           <AppStatusPill status={myApplication.status} t={t} />
         ) : job.status === 'open' ? (
-          <button className="btn btn-primary" onClick={applyNow}>{t('jobDetail.applyNow')}</button>
+          <button className="btn btn-primary" onClick={applyNow} disabled={busy}>{t('jobDetail.applyNow')}</button>
         ) : (
           <AppStatusPill status={job.status} t={t} />
         )}

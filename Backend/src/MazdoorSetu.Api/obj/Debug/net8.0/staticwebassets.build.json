@@ -1,11 +1,1 @@
-{
-  "Version": 1,
-  "Hash": "Bug0y5ap9W95/24p0c26frSOW+ecCVQIagVM5NOWU7Q=",
-  "Source": "MazdoorSetu.Api",
-  "BasePath": "_content/MazdoorSetu.Api",
-  "Mode": "Default",
-  "ManifestType": "Build",
-  "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
-}
+{"Version":1,"Hash":"h2/5RDFy0auyTRkIfrQhY5aBq4LMj6FBeqzW/2eVA/4=","Source":"MazdoorSetu.Api","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}

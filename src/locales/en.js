@@ -76,6 +76,12 @@ export default {
     wantToApply: 'Want to apply for this job?',
     notFound: "This job isn't available anymore",
     notFoundHint: 'It may have been filled or removed. Browse other open jobs instead.',
+    applyErrorAlready: 'You have already applied to this job.',
+    applyErrorNotOpen: 'This job is no longer open for applications.',
+    applyErrorSelf: 'You cannot apply to a job you posted.',
+    applyErrorGeneric: 'Could not submit your application. Please try again.',
+    withdrawErrorNotPending: 'This application can no longer be withdrawn.',
+    withdrawErrorGeneric: 'Could not withdraw your application. Please try again.',
     status: {
       pending: 'Pending',
       accepted: 'Accepted',

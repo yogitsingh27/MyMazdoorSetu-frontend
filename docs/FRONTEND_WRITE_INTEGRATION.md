@@ -10,7 +10,7 @@ next begins.
 | Phase | Scope | Status |
 |-------|-------|--------|
 | 1 | Foundation: dev proxy, HTTP client with auth + auto-refresh, `AuthService`, `AuthContext`, password login/registration | **done** |
-| 2 | Apply / Withdraw (`ApplicationService`) | pending |
+| 2 | Apply / Withdraw (`ApplicationService`) | **done** |
 | 3 | Accept / Reject (`EmployerService` / `ContractorService`) | pending |
 | 4 | Job posting (`JobService` via `PostJobModal`) | pending |
 
@@ -112,6 +112,99 @@ never sends a user id.
 
 ---
 
+## Phase 2 – Apply & Withdraw
+
+Moves the worker's Apply, Withdraw, and "my applications" flows off mock data and
+onto the authenticated API. Identity always comes from the JWT — the frontend
+never sends an applicant id.
+
+### Endpoint mapping
+
+| UI action | Service call | API request | Success |
+|-----------|--------------|-------------|---------|
+| Apply (public Job Detail) | `ApplicationService.apply({ jobId })` | `POST /jobs/{code}/applications` | `201` new / `200` reactivated |
+| Apply (worker dashboard "Nearby jobs") | `WorkerService.apply(code)` → `ApplicationService.apply` | `POST /jobs/{code}/applications` | `201` / `200` |
+| Withdraw (Job Detail + My applications) | `ApplicationService.withdraw(appId)` | `POST /applications/{id}/withdraw` | `200` |
+| CTA state on Job Detail | `ApplicationService.find({ jobId })` | `GET /me/applications` → match `jobCode` | `200` |
+| My applications list | `WorkerService.myApplications()` → `ApplicationService.forApplicant` | `GET /me/applications` | `200` |
+| Nearby-jobs feed (so Apply hits real codes) | `WorkerService.nearbyJobs()` | `GET /jobs` (open) | `200` |
+
+`jobId` in the frontend **is** the job `code` (e.g. `JOB-2334`); withdraw uses the
+application's GUID `id` returned by the API. There is no dedicated "my application
+for job X" endpoint, so `find()` fetches `GET /me/applications` (which includes
+withdrawn rows) and matches on `jobCode`. `find()` is only called for users who
+hold the Worker role, so non-workers never trigger the Worker-gated endpoint.
+
+### DTO mapping
+
+`MyApplicationDto` → legacy application shape via a new `mapMyApplication()` in
+`mappers.js`:
+
+```
+{ id, jobId: jobCode, jobCode, jobTitle, trade, wage,
+  jobStatus, status, appliedAt, decidedAt, updatedAt }
+```
+
+`status` (`pending|accepted|rejected|withdrawn`) and `jobStatus`
+(`open|closed|completed`) already serialize lowercase, matching the existing
+`StatusPill` / `AppStatusPill` keys — no UI change.
+
+### Service changes
+
+- `ApplicationService.apply / withdraw / find / forApplicant` gain an API branch
+  (`USE_API`), mock branch preserved.
+- `WorkerService.apply / withdrawApplication / myApplications` already delegate to
+  `ApplicationService`, so they become API-backed automatically.
+- `WorkerService.nearbyJobs` switches to the API open-jobs feed (via `JobService`)
+  so the dashboard Apply button targets **real** job codes. This is the one read
+  touched, and only because Apply cannot be verified against mock-only codes.
+
+### UI flow, loading & errors
+
+- **Server-confirmed, no optimism**: await the API, then `reload()` the relevant
+  `useServiceData` (`find` on Job Detail, the list on My Applications). On failure
+  the UI stays in its prior state and shows a message.
+- **Loading**: the Apply/Withdraw CTA is disabled while a request is in flight
+  (prevents a double-submit that would otherwise 409). Existing skeletons unchanged.
+- **Duplicate (`409 application.already_applied`)**: caught and shown as a friendly
+  message, then state is re-synced via `reload()`. Not normally reachable from Job
+  Detail (the CTA hides once an application exists) but possible from the dashboard.
+- **Withdrawn reactivation**: re-applying to a withdrawn row returns `200` with the
+  same id; the UI treats `200` and `201` identically (same toast).
+- **Other errors**: `job.not_open` / `job.not_found` / `application.self_apply` /
+  `application.not_pending` map to specific localized messages; anything else falls
+  back to a generic apply/withdraw error.
+
+### Localization impact
+
+- **Job Detail** is fully bilingual: new keys `jobDetail.applyError*` /
+  `jobDetail.withdrawError*` are added to `en.js` **and** `hi.js`. Success toasts
+  (`jobDetail.applied`, `jobDetail.withdrawn`) already exist.
+- **Worker dashboard pages** are English-only by existing convention, so their
+  Apply/Withdraw error strings are hardcoded English (no new locale keys).
+
+### Authentication requirements
+
+All four endpoints require a valid access token with the **Worker** role. The HTTP
+client attaches the bearer token and transparently refreshes on `401`. Non-workers
+never reach these calls from the UI (`find` is role-gated client-side; the Apply
+CTA's failure path surfaces a localized error).
+
+### Verification checklist — verified 2026-07-04
+
+- [x] Apply from public Job Detail → CTA flips to Withdraw/status; row appears in My Applications.
+- [x] Apply from worker dashboard "Nearby jobs" (real API feed) → success toast; POST returns 201.
+- [x] Withdraw from Job Detail → CTA returns to Apply.
+- [x] Withdraw from My Applications → row updates.
+- [x] Re-apply after withdrawal → `200`, same application id reactivated (pending).
+- [x] Duplicate apply → `409` handled with a friendly message, no crash.
+- [x] **Refresh after applying** → Job Detail CTA and My Applications both restored from the backend.
+- [x] **Authorization** → a worker cannot withdraw another worker's application (`403 application.forbidden`); the UI shows a graceful error and preserves state (no crash, no optimistic removal).
+- [x] Errors localized on Job Detail (English **and** Hindi).
+- [x] Token refresh transparent during these calls (session restored on every hard load).
+
+---
+
 ## Remaining mock services (dashboard reads)
 
 These stay on **mock data** for this milestone. They are the dashboard read
@@ -119,7 +212,7 @@ widgets whose backend endpoints are not part of the write integration. They are
 marked in code with a `MOCK (dashboard read)` banner comment so future backend
 wiring is obvious:
 
-- `WorkerService` — worker dashboard summary, saved jobs, profile self-view
+- `WorkerService` — dashboard summary, availability, profile self-view *(apply/withdraw/my-applications and the nearby-jobs feed move to the API in Phase 2)*
 - `ContractorService` — managed workers, contractor dashboard summary
 - `EmployerService` — saved workers, employer dashboard summary *(accept/reject
   moves to the API in Phase 3)*

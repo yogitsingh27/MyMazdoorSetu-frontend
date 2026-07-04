@@ -11,6 +11,22 @@ import { WorkerService } from '@/services';
 import JobTicket from '@/components/job/JobTicket';
 import { useToast } from '@/contexts/ToastContext';
 
+// These worker dashboard pages are English-only by existing convention (see
+// docs/CHANGELOG.md), so backend error codes map to hardcoded English strings
+// rather than locale keys.
+const APPLY_ERRORS = {
+  'application.already_applied': 'You have already applied to this job.',
+  'job.not_open': 'This job is no longer open for applications.',
+  'application.self_apply': 'You cannot apply to a job you posted.',
+};
+const applyError = (err) => APPLY_ERRORS[err?.code] || 'Could not apply. Please try again.';
+
+const WITHDRAW_ERRORS = {
+  'application.not_pending': 'This application can no longer be withdrawn.',
+  'application.forbidden': 'You can only withdraw your own applications.',
+};
+const withdrawError = (err) => WITHDRAW_ERRORS[err?.code] || 'Could not withdraw. Please try again.';
+
 export function BrowseJobsPage() {
   const { user } = useAuth();
   const { data: jobs, loading } = useServiceData(() => WorkerService.nearbyJobs(), []);
@@ -19,8 +35,12 @@ export function BrowseJobsPage() {
   if (loading) return <div><PageHead title="Nearby jobs" /><PageSkeleton stats={false} /></div>;
 
   const apply = async (job) => {
-    await WorkerService.apply(job.id, user.id);
-    toast(`Applied to ${job.title}`);
+    try {
+      await WorkerService.apply(job.id, user.id);
+      toast(`Applied to ${job.title}`);
+    } catch (err) {
+      toast(applyError(err), 'error');
+    }
   };
 
   return (
@@ -46,10 +66,15 @@ export function MyApplicationsPage() {
 
   const withdraw = async (app) => {
     setBusyId(app.id);
-    await WorkerService.withdrawApplication(app.id);
-    toast(`Application to ${app.jobTitle} withdrawn`, 'info');
-    setBusyId(null);
-    reload();
+    try {
+      await WorkerService.withdrawApplication(app.id);
+      toast(`Application to ${app.jobTitle} withdrawn`, 'info');
+    } catch (err) {
+      toast(withdrawError(err), 'error');
+    } finally {
+      setBusyId(null);
+      reload(); // server-confirmed: re-sync the list from the backend
+    }
   };
 
   return (
