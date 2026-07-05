@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MazdoorSetu.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+41539c406080df3c1224c77f5f18e18b19dbd6a9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6d9b9fc41b005ffe907077d591e7f67f8aeef860")]
 [assembly: System.Reflection.AssemblyProductAttribute("MazdoorSetu.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MazdoorSetu.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

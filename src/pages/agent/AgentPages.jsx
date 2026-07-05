@@ -4,6 +4,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { StatusPill } from '@/components/common/Rating';
 import { useServiceData } from '@/hooks/useServiceData';
 import { AgentService } from '@/services';
+import SampleDataNotice from '@/components/common/SampleDataNotice';
 
 export function RegisteredWorkersPage() {
   const { data: workers, loading } = useServiceData(() => AgentService.registeredWorkers(), []);
@@ -11,6 +12,7 @@ export function RegisteredWorkersPage() {
   return (
     <div>
       <PageHead title="Workers registered" desc="People you registered onto the platform." />
+      <SampleDataNotice />
       {workers.length === 0 ? (
         <EmptyState icon="users" title="No workers registered yet" hint="Register a worker to start earning commission on their job activity." />
       ) : (
@@ -40,6 +42,7 @@ export function RegisteredContractorsPage() {
   return (
     <div>
       <PageHead title="Contractors registered" desc="Contractors you registered onto the platform." />
+      <SampleDataNotice />
       {contractors.length === 0 ? (
         <EmptyState icon="briefcase" title="No contractors registered yet" hint="Register a contractor to start earning commission on the jobs they post." />
       ) : (
@@ -70,6 +73,7 @@ export function CommissionPage() {
   return (
     <div>
       <PageHead title="Commission" desc="Your earnings from registrations and postings." />
+      <SampleDataNotice />
       <div className="stat-row">
         <div className="stat-card"><div className="num mono">₹{data.total}</div><div className="lbl">Total earned</div></div>
         <div className="stat-card"><div className="num mono">₹{data.paid}</div><div className="lbl">Paid out</div></div>

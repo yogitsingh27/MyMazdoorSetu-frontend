@@ -11,6 +11,8 @@ using MazdoorSetu.Api.Persistence;
 using MazdoorSetu.Api.Persistence.Seed;
 using MazdoorSetu.Core.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -31,10 +33,32 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddProblemDetails();
 
+// Readiness probe (see /health). Dependency-free DB check.
+builder.Services.AddHealthChecks().AddCheck<MazdoorSetu.Api.Common.DbHealthCheck>("database");
+
+// Minimal request logging: method, path, status, duration.
+builder.Services.AddHttpLogging(o =>
+    o.LoggingFields = HttpLoggingFields.RequestMethod | HttpLoggingFields.RequestPath
+        | HttpLoggingFields.ResponseStatusCode | HttpLoggingFields.Duration);
+
+// Trust the platform reverse proxy so Request.IsHttps/RemoteIp are accurate — this
+// makes the refresh cookie's `Secure = Request.IsHttps` correct behind TLS termination.
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Cleared to accept the platform's proxy; restrict KnownNetworks/KnownProxies for a
+    // hardened deployment (see docs/DEPLOYMENT.md).
+    o.KnownNetworks.Clear();
+    o.KnownProxies.Clear();
+});
+
 const string FrontendCors = "frontend";
+// Origins from config (Cors:Origins). Dev falls back to the Vite dev server.
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+    ?? new[] { "http://localhost:5173" };
 builder.Services.AddCors(options =>
     options.AddPolicy(FrontendCors, policy =>
-        policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
+        policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddScoped<JobReadService>();
 builder.Services.AddScoped<WorkerReadService>();
@@ -83,6 +107,26 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
             }));
+
+    // Global per-IP limiter for state-changing requests. GETs/HEAD/OPTIONS and the
+    // auth endpoints (which carry their own "auth" policy) are exempt so they aren't
+    // double-counted. Reuses the OnRejected 429 ProblemDetails below.
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var method = httpContext.Request.Method;
+        if (HttpMethods.IsGet(method) || HttpMethods.IsHead(method) || HttpMethods.IsOptions(method)
+            || httpContext.Request.Path.StartsWithSegments("/api/v1/auth"))
+            return RateLimitPartition.GetNoLimiter("exempt");
+
+        var key = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter("write:" + key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60, // writes per IP per minute; tunable
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        });
+    });
+
     options.OnRejected = async (context, cancellationToken) =>
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -99,6 +143,9 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// Must run first so downstream sees the real scheme/IP behind a proxy.
+app.UseForwardedHeaders();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -113,6 +160,34 @@ if (app.Environment.IsDevelopment())
         ? "Development seed data applied."
         : "Development seed data already present — skipped.");
 }
+else
+{
+    // Apply pending migrations on startup (guarded: non-Development only). Suitable for a
+    // single-instance beta; for multi-instance, run migrations as a separate deploy step
+    // instead — see docs/DEPLOYMENT.md.
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+    }
+
+    // Unhandled exceptions return an RFC 7807 ProblemDetails (no stack traces in prod).
+    app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            title = "Server Error",
+            status = 500,
+            detail = "An unexpected error occurred.",
+            code = "server.error",
+        });
+    }));
+    app.UseHsts();
+}
+
+app.UseHttpLogging();
 
 app.UseCors(FrontendCors);
 
@@ -124,5 +199,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

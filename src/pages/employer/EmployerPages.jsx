@@ -1,39 +1,44 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHead, IdChip } from '@/components/common/Primitives';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import EmptyState from '@/components/common/EmptyState';
 import { StatusPill, Stars } from '@/components/common/Rating';
-import { ReviewModal } from '@/components/common/Reviews';
-import { WORKER_RATING_CATS } from '@/data/reviews';
 import { useServiceData } from '@/hooks/useServiceData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { EmployerService } from '@/services';
 import PostJobModal from '@/components/job/PostJobModal';
+import ErrorState from '@/components/common/ErrorState';
+import SampleDataNotice from '@/components/common/SampleDataNotice';
 import { decideErrorMessage } from '@/pages/shared/applicantErrors';
+import { jobErrorMessage } from '@/pages/shared/jobErrors';
 
 export function FindWorkersPage() {
-  const { data: workers, loading } = useServiceData(() => EmployerService.findWorkers(), []);
+  const navigate = useNavigate();
+  // Real workers from the /workers endpoint (via EmployerService.findWorkers).
+  const { data: workers, loading, error, reload } = useServiceData(() => EmployerService.findWorkers(), []);
 
   if (loading) return <div><PageHead title="Find workers" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="Find workers" /><ErrorState onRetry={reload} /></div>;
 
   return (
     <div>
-      <PageHead title="Find workers" desc="Search by trade, rating, and availability." />
+      <PageHead title="Find workers" desc="Browse workers by trade and rating." />
       {workers.length === 0 ? (
         <EmptyState icon="users" title="No workers match yet" hint="Try a different trade or widen your search area." />
       ) : (
         <div className="card" style={{ padding: 0 }}>
           <table className="list">
-            <thead><tr><th>Worker</th><th>Trade</th><th>Rating</th><th>Availability</th><th></th></tr></thead>
+            <thead><tr><th>Worker</th><th>Trade</th><th>Rating</th><th>City</th><th></th></tr></thead>
             <tbody>
               {workers.map((w) => (
-                <tr key={w.name}>
+                <tr key={w.id}>
                   <td><IdChip name={w.name} /></td>
-                  <td>{w.trade}</td>
-                  <td><Stars value={w.rating} size={12} /> <span className="mono" style={{ fontSize: 12 }}>{w.rating.toFixed(1)}</span></td>
-                  <td><StatusPill status={w.available ? 'active' : 'pending'} /></td>
-                  <td><button className="btn-sm">View profile</button></td>
+                  <td>{w.workerProfile.trade}</td>
+                  <td><Stars value={w.workerProfile.rating} size={12} /> <span className="mono" style={{ fontSize: 12 }}>{w.workerProfile.rating.toFixed(1)}</span></td>
+                  <td>{w.city}</td>
+                  <td><button className="btn-sm" onClick={() => navigate(`/workers/${w.id}`)}>View profile</button></td>
                 </tr>
               ))}
             </tbody>
@@ -46,10 +51,27 @@ export function FindWorkersPage() {
 
 export function EmployerJobsPage() {
   const [showPost, setShowPost] = useState(false);
-  const [reviewTarget, setReviewTarget] = useState(null);
-  const { data: jobs, loading, reload } = useServiceData(() => EmployerService.myJobs(), []);
+  const [busyId, setBusyId] = useState(null);
+  const { data: jobs, loading, error, reload } = useServiceData(() => EmployerService.myJobs(), []);
+  const toast = useToast();
 
   if (loading) return <div><PageHead title="My jobs" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="My jobs" /><ErrorState onRetry={reload} /></div>;
+
+  // Job lifecycle transitions (server-confirmed): Open -> Closed -> Completed.
+  const transition = async (job, action) => {
+    setBusyId(job.id);
+    try {
+      if (action === 'close') await EmployerService.closeJob(job.id);
+      else await EmployerService.completeJob(job.id);
+      toast(action === 'close' ? `${job.id} closed to new applications` : `${job.id} marked completed`, 'info');
+    } catch (err) {
+      toast(jobErrorMessage(err), 'error');
+    } finally {
+      setBusyId(null);
+      reload();
+    }
+  };
 
   return (
     <div>
@@ -66,26 +88,29 @@ export function EmployerJobsPage() {
                   <td className="mono">{j.id} <span style={{ color: 'var(--text)', fontFamily: 'var(--body)' }}>— {j.title}</span></td>
                   <td>{j.trade}</td>
                   <td><StatusPill status={j.status} /></td>
-                  <td>{j.status === 'completed' && <button className="btn-sm orange" onClick={() => setReviewTarget('Worker')}>Rate worker</button>}</td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    {j.status === 'open' && <button className="btn-sm muted" disabled={busyId === j.id} onClick={() => transition(j, 'close')}>Close</button>}
+                    {j.status === 'closed' && <button className="btn-sm orange" disabled={busyId === j.id} onClick={() => transition(j, 'complete')}>Complete</button>}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-      {showPost && <PostJobModal onClose={() => setShowPost(false)} onPosted={reload} />}
-      {reviewTarget && <ReviewModal onClose={() => setReviewTarget(null)} subjectName={reviewTarget} categories={WORKER_RATING_CATS} />}
+      {showPost && <PostJobModal onClose={() => setShowPost(false)} onPosted={reload} postedAsRole="employer" />}
     </div>
   );
 }
 
 export function EmployerApplicationsPage() {
   const { user } = useAuth();
-  const { data: apps, loading, reload } = useServiceData(() => EmployerService.applications(user.id), [user.id]);
+  const { data: apps, loading, error, reload } = useServiceData(() => EmployerService.applications(user.id), [user.id]);
   const toast = useToast();
   const [busyId, setBusyId] = useState(null);
 
   if (loading) return <div><PageHead title="Applications" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="Applications" /><ErrorState onRetry={reload} /></div>;
 
   const decide = async (app, decision) => {
     setBusyId(app.id);
@@ -135,11 +160,13 @@ export function EmployerApplicationsPage() {
 }
 
 export function SavedWorkersPage() {
-  const { data: workers, loading } = useServiceData(() => EmployerService.savedWorkers(), []);
+  const { data: workers, loading, error, reload } = useServiceData(() => EmployerService.savedWorkers(), []);
   if (loading) return <div><PageHead title="Saved workers" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="Saved workers" /><ErrorState onRetry={reload} /></div>;
   return (
     <div>
       <PageHead title="Saved workers" desc="Workers you bookmarked for future jobs." />
+      <SampleDataNotice />
       {workers.length === 0 ? (
         <EmptyState icon="users" title="No saved workers yet" hint="Bookmark workers from search results to keep them handy for future jobs." />
       ) : (

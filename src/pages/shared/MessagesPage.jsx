@@ -3,6 +3,7 @@ import { MessageService } from '@/services';
 import { PageHead, Avatar } from '@/components/common/Primitives';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import EmptyState from '@/components/common/EmptyState';
+import SampleDataNotice from '@/components/common/SampleDataNotice';
 
 export default function MessagesPage() {
   const { data: threads, loading } = useServiceData(() => MessageService.threads(), []);
@@ -12,6 +13,7 @@ export default function MessagesPage() {
   return (
     <div>
       <PageHead title="Messages" desc="Conversations with workers, hirers, and agents." />
+      <SampleDataNotice />
       {threads.length === 0 ? (
         <EmptyState icon="message" title="No conversations yet" hint="Messages from people you work with will show up here." />
       ) : (

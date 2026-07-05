@@ -1,6 +1,7 @@
 using MazdoorSetu.Api.Persistence;
 using MazdoorSetu.Core.Entities;
 using MazdoorSetu.Core.Enums;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace MazdoorSetu.Api.Features.Jobs;
@@ -22,7 +23,6 @@ public class JobWriteService
         var job = new Job
         {
             Id = Guid.NewGuid(),
-            Code = await GenerateCodeAsync(),
             Title = req.Title.Trim(),
             TradeId = trade.Id,
             Wage = req.Wage.Trim(),
@@ -41,7 +41,26 @@ public class JobWriteService
             job.Requirements.Add(new JobRequirement { Id = Guid.NewGuid(), JobId = job.Id, Text = text.Trim() });
 
         _db.Jobs.Add(job);
-        await _db.SaveChangesAsync();
+
+        // The code is derived from the current max suffix, so two concurrent creates can
+        // pick the same value. The unique index on Job.Code is the integrity backstop; on a
+        // duplicate-key violation (and ONLY that) we recompute — GenerateCodeAsync now sees
+        // the winner — and retry. Any other DbUpdateException propagates immediately.
+        const int maxAttempts = 5;
+        for (var attempt = 1; ; attempt++)
+        {
+            job.Code = await GenerateCodeAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+                break;
+            }
+            catch (DbUpdateException ex) when (attempt < maxAttempts && IsDuplicateKeyViolation(ex))
+            {
+                // Duplicate Job.Code from a concurrent create — recompute and retry.
+            }
+        }
+
         return (JobWriteError.None, await MapAsync(job.Id));
     }
 
@@ -101,6 +120,12 @@ public class JobWriteService
             Tags = j.Tags.Select(t => t.Tag).ToList(),
             Requirements = j.Requirements.Select(r => r.Text).ToList(),
         }).FirstAsync();
+
+    // SQL Server duplicate-key errors: 2627 (unique constraint) / 2601 (unique index).
+    // Job.Code is the only unique index a create can trip, so this scopes the retry to the
+    // code collision and lets every other DbUpdateException surface.
+    private static bool IsDuplicateKeyViolation(DbUpdateException ex) =>
+        ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627);
 
     // "JOB-NNNN" from the current max numeric suffix; the unique index on Code is the safety net.
     private async Task<string> GenerateCodeAsync()

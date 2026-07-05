@@ -104,6 +104,43 @@ export function mapApplicant(dto) {
   };
 }
 
+// Backend PostedJobDto (a poster's view of one of their jobs) -> the flat shape
+// the "My jobs" table consumes. `id` mirrors `code` (the frontend keys jobs by code).
+export function mapPostedJob(dto) {
+  return {
+    id: dto.code,
+    code: dto.code,
+    title: dto.title,
+    trade: dto.trade,
+    status: dto.status,
+    openings: dto.openings,
+    postedByRole: dto.postedByRole,
+    postedAt: dto.postedAt,
+    applicationCount: dto.applicationCount,
+    pendingCount: dto.pendingCount,
+  };
+}
+
+// Backend JobDto (create / close / complete response) -> the flat job shape.
+export function mapJobWrite(dto) {
+  return {
+    id: dto.code,
+    code: dto.code,
+    title: dto.title,
+    trade: dto.trade,
+    wage: dto.wage,
+    location: dto.location,
+    duration: dto.duration,
+    description: dto.description,
+    status: dto.status,
+    openings: dto.openings,
+    postedByRole: dto.postedByRole,
+    postedAt: dto.postedAt,
+    tags: dto.tags ?? [],
+    requirements: dto.requirements ?? [],
+  };
+}
+
 export function mapReview(dto) {
   return {
     id: dto.id,

@@ -3,21 +3,39 @@ import { PageHead, IdChip } from '@/components/common/Primitives';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import EmptyState from '@/components/common/EmptyState';
 import { StatusPill, Stars } from '@/components/common/Rating';
-import { ReviewModal } from '@/components/common/Reviews';
-import { WORKER_RATING_CATS } from '@/data/reviews';
 import { useServiceData } from '@/hooks/useServiceData';
 import { useAuth } from '@/contexts/AuthContext';
 import { ContractorService } from '@/services';
 import { useToast } from '@/contexts/ToastContext';
 import PostJobModal from '@/components/job/PostJobModal';
+import ErrorState from '@/components/common/ErrorState';
+import SampleDataNotice from '@/components/common/SampleDataNotice';
 import { decideErrorMessage } from '@/pages/shared/applicantErrors';
+import { jobErrorMessage } from '@/pages/shared/jobErrors';
 
 export function ContractorJobsPage() {
   const [showPost, setShowPost] = useState(false);
-  const [reviewTarget, setReviewTarget] = useState(null);
-  const { data: jobs, loading, reload } = useServiceData(() => ContractorService.myJobs(), []);
+  const [busyId, setBusyId] = useState(null);
+  const { data: jobs, loading, error, reload } = useServiceData(() => ContractorService.myJobs(), []);
+  const toast = useToast();
 
   if (loading) return <div><PageHead title="My jobs" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="My jobs" /><ErrorState onRetry={reload} /></div>;
+
+  // Job lifecycle transitions (server-confirmed): Open -> Closed -> Completed.
+  const transition = async (job, action) => {
+    setBusyId(job.id);
+    try {
+      if (action === 'close') await ContractorService.closeJob(job.id);
+      else await ContractorService.completeJob(job.id);
+      toast(action === 'close' ? `${job.id} closed to new applications` : `${job.id} marked completed`, 'info');
+    } catch (err) {
+      toast(jobErrorMessage(err), 'error');
+    } finally {
+      setBusyId(null);
+      reload();
+    }
+  };
 
   return (
     <div>
@@ -34,26 +52,29 @@ export function ContractorJobsPage() {
                   <td className="mono">{j.id} <span style={{ color: 'var(--text)', fontFamily: 'var(--body)' }}>— {j.title}</span></td>
                   <td>{j.trade}</td>
                   <td><StatusPill status={j.status} /></td>
-                  <td>{j.status === 'completed' && <button className="btn-sm orange" onClick={() => setReviewTarget('Ramesh Kumar')}>Rate worker</button>}</td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    {j.status === 'open' && <button className="btn-sm muted" disabled={busyId === j.id} onClick={() => transition(j, 'close')}>Close</button>}
+                    {j.status === 'closed' && <button className="btn-sm orange" disabled={busyId === j.id} onClick={() => transition(j, 'complete')}>Complete</button>}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-      {showPost && <PostJobModal onClose={() => setShowPost(false)} onPosted={reload} />}
-      {reviewTarget && <ReviewModal onClose={() => setReviewTarget(null)} subjectName={reviewTarget} categories={WORKER_RATING_CATS} />}
+      {showPost && <PostJobModal onClose={() => setShowPost(false)} onPosted={reload} postedAsRole="contractor" />}
     </div>
   );
 }
 
 export function ApplicantsPage() {
   const { user } = useAuth();
-  const { data: apps, loading, reload } = useServiceData(() => ContractorService.applicants(user.id), [user.id]);
+  const { data: apps, loading, error, reload } = useServiceData(() => ContractorService.applicants(user.id), [user.id]);
   const toast = useToast();
   const [busyId, setBusyId] = useState(null);
 
   if (loading) return <div><PageHead title="Applicants" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="Applicants" /><ErrorState onRetry={reload} /></div>;
 
   const decide = async (app, decision) => {
     setBusyId(app.id);
@@ -103,7 +124,7 @@ export function ApplicantsPage() {
 }
 
 export function ManagedWorkersPage() {
-  const { data: fetched, loading } = useServiceData(() => ContractorService.managedWorkers(), []);
+  const { data: fetched, loading, error, reload } = useServiceData(() => ContractorService.managedWorkers(), []);
   const [rows, setRows] = useState([]);
   const toast = useToast();
 
@@ -113,6 +134,7 @@ export function ManagedWorkersPage() {
   }, [fetched]);
 
   if (loading) return <div><PageHead title="Managed workers" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="Managed workers" /><ErrorState onRetry={reload} /></div>;
 
   const toggleContact = (i) => {
     setRows((prev) => prev.map((w, idx) => {
@@ -125,6 +147,7 @@ export function ManagedWorkersPage() {
   return (
     <div>
       <PageHead title="Managed workers" desc="Toggle whether hirers can contact a worker directly. Can still be overridden per job post." />
+      <SampleDataNotice />
       {rows.length === 0 ? (
         <EmptyState icon="users" title="No workers under your contracts yet" hint="Workers you bring on for projects will appear here." />
       ) : (

@@ -12,7 +12,7 @@ next begins.
 | 1 | Foundation: dev proxy, HTTP client with auth + auto-refresh, `AuthService`, `AuthContext`, password login/registration | **done** |
 | 2 | Apply / Withdraw (`ApplicationService`) | **done** |
 | 3 | Accept / Reject (`EmployerService` / `ContractorService`) | **done** |
-| 4 | Job posting (`JobService` via `PostJobModal`) | pending |
+| 4 | Job posting + management (`JobService`, `PostJobModal`, posted-jobs pages) | **done** |
 
 The feature flag `VITE_USE_API` (see `src/services/http.js`) switches the whole
 service layer between **mock mode** and **API mode**. With it off, everything
@@ -297,6 +297,113 @@ and role filtering — no UI change.
 
 ---
 
+## Phase 4 – Job Posting & Management (Create / Close / Complete)
+
+Makes the `PostJobModal` functional, sources the poster's "My jobs" list from the
+real API, and surfaces the job lifecycle transitions (Close, Complete). Identity
+and ownership come from the JWT; the poster never sends an id.
+
+### Endpoint mapping
+
+| UI action | Service call | API request | Success |
+|-----------|--------------|-------------|---------|
+| Post a job (modal) | `JobService.create(req)` | `POST /jobs` | `201` `JobDto` |
+| My jobs list (Employer) | `EmployerService.myJobs()` → `JobService.postedJobs(employer)` | `GET /me/posted-jobs` (filter `postedByRole=employer`) | `200` |
+| My jobs list (Contractor) | `ContractorService.myJobs()` → `JobService.postedJobs(contractor)` | `GET /me/posted-jobs` (filter `postedByRole=contractor`) | `200` |
+| Close a job | `*.closeJob(code)` → `JobService.close(code)` | `POST /jobs/{code}/close` | `200` |
+| Complete a job | `*.completeJob(code)` → `JobService.complete(code)` | `POST /jobs/{code}/complete` | `200` |
+
+There is **no Update endpoint** — editing a posted job is out of scope (no
+backend support). `postedAsRole` is taken from the dashboard the modal is opened
+on (employer vs contractor), which is always a role the user holds.
+
+### DTO mapping
+
+Two new mappers in `mappers.js`:
+
+- `mapPostedJob(dto)` — `PostedJobDto` → `{ id: code, code, title, trade, status, openings, postedByRole, postedAt, applicationCount, pendingCount }` (the "My jobs" table shape).
+- `mapJobWrite(dto)` — `JobDto` (create/close/complete response) → the flat job shape (`id: code`, plus title/trade/wage/location/duration/description/status/openings/postedByRole/postedAt/tags/requirements).
+
+`status` (`open|closed|completed`) and `postedByRole` (`employer|contractor`)
+serialize lowercase, matching the existing `StatusPill` and role filtering.
+
+### Service replacements
+
+- `JobService.create` gains an API branch (`POST /jobs`); new `JobService.postedJobs(role)`, `JobService.close(code)`, `JobService.complete(code)`. Mock branches preserved.
+- `EmployerService.myJobs` / `ContractorService.myJobs` switch to `JobService.postedJobs(role)` in API mode; both gain `closeJob` / `completeJob` that delegate to `JobService` (keeping the role-service boundary, exactly like `decideApplication` in Phase 3).
+- Dashboard reads (`summary`, `findWorkers`, `savedWorkers`, `managedWorkers`, `projects`) stay on mock.
+
+### PostJobModal changes (the stub becomes functional)
+
+The modal was a non-functional stub (unbound inputs; hardcoded create). It is made
+functional **without a layout redesign**:
+
+- Bind the existing fields: title, trade (`select` from `TRADES`, all valid backend trades), wage, location, duration.
+- **Add the two backend-required fields** the stub lacked: **Description** (textarea) and **Openings** (number, default 1).
+- The two existing toggles map to job **tags**: "Allow direct contact" → `Direct contact`, "Meals included" → `Meals`.
+- Submit builds a `CreateJobRequest` and calls `JobService.create`; `postedAsRole` is passed in from the page.
+
+### Validation rules (mirrors the backend)
+
+| Field | Rule |
+|-------|------|
+| Title | required, ≤ 160 |
+| Trade | required, must be a seeded trade (select guarantees this) |
+| Wage | required, ≤ 60 |
+| Location | required, ≤ 200 |
+| Duration | required, ≤ 40 |
+| Description | required, ≤ 2000 |
+| Openings | integer ≥ 1 |
+
+Client-side checks give immediate feedback; the server is authoritative and a
+`400 request.invalid` is surfaced as a friendly message.
+
+### State transitions
+
+```
+(create) → Open ──close──▶ Closed ──complete──▶ Completed
+```
+
+- **Close** allowed only on `Open` (`Open → Closed`); **Complete** allowed only on `Closed` (`Closed → Completed`, must be closed first).
+- Row actions follow the existing conditional-button pattern in the actions column: `open` → **Close**; `closed` → **Complete**; `completed` → existing "Rate worker".
+- An out-of-state transition (e.g. from a stale view) → `409 job.invalid_transition`, handled gracefully with a message + `reload()`.
+
+### Loading, authorization, ownership & error handling
+
+- **Server-confirmed**: create → toast + `onPosted()` reload + close modal (only on success); close/complete → per-row busy disable → `reload()`.
+- **Loading**: the modal's Publish button shows a busy state and is disabled mid-request; row Close/Complete buttons disable per-row.
+- **Authorization**: create/close/complete require the `Employer` or `Contractor` role; the pages are role-guarded, so workers never reach them.
+- **Ownership**: enforced server-side (`403 job.forbidden`). `myJobs` only lists the poster's own jobs, so ownership always holds; a forced/stale cross-owner action surfaces the graceful 403.
+- **Errors** (English, dashboard convention): `request.invalid` → check-your-details message; `job.invalid_transition` → "This job can no longer change to that state."; `job.forbidden` → "You can only manage your own jobs."; `job.not_found` → "This job no longer exists."; else generic.
+
+### Verification checklist — verified 2026-07-05
+
+- [x] Post a job from the Employer dashboard → `201`; it appears in "My jobs" (real list) and is publicly retrievable.
+- [x] Post a job from the Contractor dashboard → `201`; `postedByRole=contractor`.
+- [x] Missing/invalid fields → client validation blocks; forced server `400` handled gracefully (empty description, `openings=0`, `postedAsRole` not held all → `400`).
+- [x] Close an Open job → status becomes Closed; refresh restores it.
+- [x] Complete a Closed job → status becomes Completed; refresh restores it.
+- [x] Complete on an Open job (stale) → `409 job.invalid_transition` handled gracefully.
+- [x] Ownership: cannot close/complete someone else's job (`403 job.forbidden`); UI handles it gracefully (forced-403 + HTTP layer).
+- [x] Role scoping: employer "My jobs" shows only employer-posted jobs; contractor only contractor-posted (verified in-UI).
+- [x] Token refresh transparent; Phases 1–3 still pass.
+- [x] **Newly created job appears on the public Browse Jobs page** and is publicly retrievable.
+- [x] **A worker can immediately apply to the newly created job** (create → browse → apply worked end-to-end in the UI; accept verified at the HTTP layer).
+
+### Future enhancement — editing posted jobs
+
+Editing an existing job (title, wage, description, openings, etc.) is
+**intentionally omitted** from this milestone because **no backend Update
+endpoint exists** (`JobWriteController` exposes only create, close, and
+complete). The service layer and UI deliberately expose no "Edit" action to
+avoid implying a capability the API does not support. When a
+`PUT/PATCH /jobs/{code}` endpoint is added, the natural extension is a
+`JobService.update(code, changes)` method plus an Edit affordance on the "My
+jobs" rows (mirroring the Close/Complete pattern added here). Until then, a
+poster changes a job by closing it and posting a new one.
+
+---
+
 ## Remaining mock services (dashboard reads)
 
 These stay on **mock data** for this milestone. They are the dashboard read
@@ -305,8 +412,8 @@ marked in code with a `MOCK (dashboard read)` banner comment so future backend
 wiring is obvious:
 
 - `WorkerService` — dashboard summary, availability, profile self-view *(apply/withdraw/my-applications and the nearby-jobs feed move to the API in Phase 2)*
-- `ContractorService` — my-jobs list, managed workers, projects, dashboard summary *(view-applicants and accept/reject move to the API in Phase 3)*
-- `EmployerService` — my-jobs list, find/saved workers, dashboard summary *(view-applicants and accept/reject move to the API in Phase 3)*
+- `ContractorService` — managed workers, projects, dashboard summary *(view-applicants + accept/reject → API in Phase 3; my-jobs + close/complete → API in Phase 4)*
+- `EmployerService` — find/saved workers, dashboard summary *(view-applicants + accept/reject → API in Phase 3; my-jobs + close/complete → API in Phase 4)*
 - `AgentService`, `AdminService` — agent/admin dashboards
 - `NotificationService`, `MessageService`, `ComplaintService`, `ReviewService`
 

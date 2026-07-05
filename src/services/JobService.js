@@ -1,7 +1,7 @@
 import { respond, request, getOrNull, USE_API } from './http';
 import { JOBS } from '@/data/jobs';
 import { USERS } from '@/data/users';
-import { mapJobSummary, mapJobDetail } from './mappers';
+import { mapJobSummary, mapJobDetail, mapPostedJob, mapJobWrite } from './mappers';
 
 // Each filter key maps to a builder that takes the filter's value and
 // returns a (job) => boolean test. Adding a future filter (wageMin,
@@ -46,11 +46,46 @@ function enrichMockJob(job) {
 }
 
 export const JobService = {
-  // --- dashboard / internal (mock) ---
+  // --- dashboard / internal ---
   async list() { return respond(JOBS); },
   async listOpen() { return respond(JOBS.filter((j) => j.status === 'open')); },
   async byPoster(userId) { return respond(JOBS.filter((j) => j.postedById === userId)); },
-  async create(job) { return respond({ id: `JOB-${Math.floor(2300 + Math.random() * 99)}`, status: 'open', ...job }); },
+
+  /** Create a job. In API mode `job` is a CreateJobRequest (postedAsRole set by the caller). */
+  async create(job) {
+    if (USE_API) {
+      const dto = await request('/jobs', { method: 'POST', body: job });
+      return mapJobWrite(dto);
+    }
+    return respond({ id: `JOB-${Math.floor(2300 + Math.random() * 99)}`, status: 'open', ...job });
+  },
+
+  /** The authenticated poster's jobs, scoped to one persona (employer/contractor). */
+  async postedJobs(role) {
+    if (USE_API) {
+      const list = await request('/me/posted-jobs');
+      return list.filter((j) => j.postedByRole === role).map(mapPostedJob);
+    }
+    return respond(JOBS.filter((j) => j.postedByRole === role));
+  },
+
+  /** Owner closes an Open job (Open -> Closed). */
+  async close(code) {
+    if (USE_API) {
+      const dto = await request(`/jobs/${encodeURIComponent(code)}/close`, { method: 'POST' });
+      return mapJobWrite(dto);
+    }
+    return respond({ id: code, code, status: 'closed' });
+  },
+
+  /** Owner completes a Closed job (Closed -> Completed). */
+  async complete(code) {
+    if (USE_API) {
+      const dto = await request(`/jobs/${encodeURIComponent(code)}/complete`, { method: 'POST' });
+      return mapJobWrite(dto);
+    }
+    return respond({ id: code, code, status: 'completed' });
+  },
 
   // --- public read (API or mock) ---
   async get(id) {

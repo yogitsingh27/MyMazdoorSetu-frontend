@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import ProjectCard from '@/components/landing/ProjectCard';
 import EmptyState from '@/components/common/EmptyState';
+import SampleDataNotice from '@/components/common/SampleDataNotice';
 import { CONSTRUCTION_PROJECTS } from '@/data/constructionProjects';
 
 export default function ProjectsBrowse() {
@@ -12,6 +13,8 @@ export default function ProjectsBrowse() {
         <h2>Construction sites hiring right now</h2>
         <p className="section-desc">Ongoing and upcoming projects across Delhi NCR where contractors and employers on MyMazdoorSetu are looking for workers.</p>
       </div>
+
+      <SampleDataNotice text="Sample projects — these are illustrative examples, not live listings yet." />
 
       {CONSTRUCTION_PROJECTS.length === 0 ? (
         <EmptyState icon="briefcase" title="No projects listed yet" hint="Check back soon as more contractors and builders list their sites." />

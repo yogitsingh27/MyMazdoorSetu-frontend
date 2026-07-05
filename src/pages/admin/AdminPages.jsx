@@ -4,6 +4,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { StatusPill } from '@/components/common/Rating';
 import { useServiceData } from '@/hooks/useServiceData';
 import { AdminService } from '@/services';
+import SampleDataNotice from '@/components/common/SampleDataNotice';
 
 export function AdminUsersPage() {
   const { data: users, loading } = useServiceData(() => AdminService.users(), []);
@@ -11,6 +12,7 @@ export function AdminUsersPage() {
   return (
     <div>
       <PageHead title="Users" desc="Everyone registered on the platform." />
+      <SampleDataNotice />
       {users.length === 0 ? (
         <EmptyState icon="users" title="No users yet" />
       ) : (
@@ -40,6 +42,7 @@ export function AdminJobsPage() {
   return (
     <div>
       <PageHead title="Jobs" desc="Every job posted across the platform." />
+      <SampleDataNotice />
       {jobs.length === 0 ? (
         <EmptyState icon="briefcase" title="No jobs yet" />
       ) : (
@@ -69,6 +72,7 @@ export function VerificationQueuePage() {
   return (
     <div>
       <PageHead title="Verification queue" desc="Accounts waiting on ID verification." />
+      <SampleDataNotice />
       {queue.length === 0 ? (
         <EmptyState icon="check" title="Nothing pending" hint="All accounts are currently verified." />
       ) : (

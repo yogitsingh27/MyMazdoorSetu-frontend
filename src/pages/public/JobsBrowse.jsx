@@ -6,6 +6,7 @@ import Icon from '@/components/common/Icon';
 import JobTicket from '@/components/job/JobTicket';
 import FilterChips from '@/components/common/FilterChips';
 import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import { TRADES, CITIES } from '@/data/companies';
 
@@ -29,10 +30,11 @@ export default function JobsBrowse() {
   };
   const clearFilters = () => setParams({}, { replace: true });
 
-  const { data, loading } = useServiceData(() => JobService.search(filters), [params.toString()]);
+  const { data, loading, error, reload } = useServiceData(() => JobService.search(filters), [params.toString()]);
   const jobs = data ?? [];
 
   if (loading) return <div className="section"><PageSkeleton stats={false} /></div>;
+  if (error) return <section className="section"><ErrorState onRetry={reload} /></section>;
 
   return (
     <section className="section">

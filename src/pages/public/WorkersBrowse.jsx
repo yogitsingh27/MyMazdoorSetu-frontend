@@ -6,6 +6,7 @@ import Icon from '@/components/common/Icon';
 import WorkerShowcaseCard from '@/components/landing/WorkerShowcaseCard';
 import FilterChips from '@/components/common/FilterChips';
 import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import { TRADES, CITIES } from '@/data/companies';
 import { cn } from '@/utils/cn';
@@ -31,10 +32,11 @@ export default function WorkersBrowse() {
   };
   const clearFilters = () => setParams({}, { replace: true });
 
-  const { data, loading } = useServiceData(() => WorkerService.search(filters), [params.toString()]);
+  const { data, loading, error, reload } = useServiceData(() => WorkerService.search(filters), [params.toString()]);
   const workers = data ?? [];
 
   if (loading) return <div className="section"><PageSkeleton stats={false} /></div>;
+  if (error) return <section className="section"><ErrorState onRetry={reload} /></section>;
 
   return (
     <section className="section">

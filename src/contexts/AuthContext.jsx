@@ -41,6 +41,11 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (phone, password) => {
     const u = await AuthService.login(phone, password);
     setUser(u);
+    // Persist a session hint immediately (before role selection). Multi-role users
+    // land on /select-role with no activeRole yet; without this a hard reload there
+    // finds no hint, skips the refresh probe, and drops them to /login despite a
+    // valid refresh cookie. RoleContext augments this with activeRole once chosen.
+    if (USE_API) AuthService.persist({ user: u });
     return u; // caller decides where to route based on u.roles
   }, []);
 

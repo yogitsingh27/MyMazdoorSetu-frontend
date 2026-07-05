@@ -3,12 +3,11 @@ import { PageHead } from '@/components/common/Primitives';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import EmptyState from '@/components/common/EmptyState';
 import { StatusPill } from '@/components/common/Rating';
-import { ReviewModal } from '@/components/common/Reviews';
-import { HIRER_RATING_CATS } from '@/data/reviews';
 import { useServiceData } from '@/hooks/useServiceData';
 import { useAuth } from '@/contexts/AuthContext';
 import { WorkerService } from '@/services';
 import JobTicket from '@/components/job/JobTicket';
+import ErrorState from '@/components/common/ErrorState';
 import { useToast } from '@/contexts/ToastContext';
 
 // These worker dashboard pages are English-only by existing convention (see
@@ -29,10 +28,11 @@ const withdrawError = (err) => WITHDRAW_ERRORS[err?.code] || 'Could not withdraw
 
 export function BrowseJobsPage() {
   const { user } = useAuth();
-  const { data: jobs, loading } = useServiceData(() => WorkerService.nearbyJobs(), []);
+  const { data: jobs, loading, error, reload } = useServiceData(() => WorkerService.nearbyJobs(), []);
   const toast = useToast();
 
   if (loading) return <div><PageHead title="Nearby jobs" /><PageSkeleton stats={false} /></div>;
+  if (error) return <div><PageHead title="Nearby jobs" /><ErrorState onRetry={reload} /></div>;
 
   const apply = async (job) => {
     try {
@@ -57,12 +57,12 @@ export function BrowseJobsPage() {
 
 export function MyApplicationsPage() {
   const { user } = useAuth();
-  const { data: apps, loading, reload } = useServiceData(() => WorkerService.myApplications(user.id), [user.id]);
-  const [reviewTarget, setReviewTarget] = useState(null);
+  const { data: apps, loading, error, reload } = useServiceData(() => WorkerService.myApplications(user.id), [user.id]);
   const [busyId, setBusyId] = useState(null);
   const toast = useToast();
 
   if (loading) return <div><PageHead title="My applications" /><PageSkeleton stats={false} table /></div>;
+  if (error) return <div><PageHead title="My applications" /><ErrorState onRetry={reload} /></div>;
 
   const withdraw = async (app) => {
     setBusyId(app.id);
@@ -95,9 +95,6 @@ export function MyApplicationsPage() {
                     {a.status === 'pending' && (
                       <button className="btn-sm muted" disabled={busyId === a.id} onClick={() => withdraw(a)}>Withdraw</button>
                     )}
-                    {a.status === 'accepted' && (
-                      <button className="btn-sm orange" onClick={() => setReviewTarget('Apex Builders')}>Rate hirer</button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -105,7 +102,6 @@ export function MyApplicationsPage() {
           </table>
         </div>
       )}
-      {reviewTarget && <ReviewModal onClose={() => setReviewTarget(null)} subjectName={reviewTarget} categories={HIRER_RATING_CATS} />}
     </div>
   );
 }

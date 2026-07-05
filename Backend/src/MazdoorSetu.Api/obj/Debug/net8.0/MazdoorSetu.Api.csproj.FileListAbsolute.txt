@@ -153,3 +153,4 @@ C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\r
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\obj\Debug\net8.0\swae.build.ex.cache
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Api\bin\Debug\net8.0\appsettings.Production.json

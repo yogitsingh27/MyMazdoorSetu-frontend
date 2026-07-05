@@ -23,6 +23,7 @@ const PATHS = {
   bookmark: 'M5 3h10v15l-5-3-5 3z',
   rupee: 'M6 4h8M6 8h8M12 4c0 4-3 5-6 5l6 7',
   share: 'M10 2v10 M6 6l4-4 4 4 M4 10v6a1 1 0 001 1h10a1 1 0 001-1v-6',
+  alert: 'M10 3l7 13H3z M10 8v4 M10 14h.01',
 };
 
 export default function Icon({ name, size = 18, color = 'currentColor' }) {
