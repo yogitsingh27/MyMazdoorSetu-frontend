@@ -11,7 +11,7 @@ next begins.
 |-------|-------|--------|
 | 1 | Foundation: dev proxy, HTTP client with auth + auto-refresh, `AuthService`, `AuthContext`, password login/registration | **done** |
 | 2 | Apply / Withdraw (`ApplicationService`) | **done** |
-| 3 | Accept / Reject (`EmployerService` / `ContractorService`) | pending |
+| 3 | Accept / Reject (`EmployerService` / `ContractorService`) | **done** |
 | 4 | Job posting (`JobService` via `PostJobModal`) | pending |
 
 The feature flag `VITE_USE_API` (see `src/services/http.js`) switches the whole
@@ -205,6 +205,98 @@ CTA's failure path surfaces a localized error).
 
 ---
 
+## Phase 3 – View Applicants, Accept & Reject
+
+Moves the poster's application-management flows (Employer **and** Contractor) off
+mock data and onto the authenticated API. Ownership and identity come from the
+JWT — the frontend never sends a poster id.
+
+### Endpoint mapping
+
+| UI action | Service call | API request(s) | Success |
+|-----------|--------------|----------------|---------|
+| View applicants (Employer) | `EmployerService.applications()` → `ApplicationService.forPoster(_, employer)` | `GET /me/posted-jobs` (filter `postedByRole=employer`) → `GET /jobs/{code}/applications` per job | `200` |
+| View applicants (Contractor) | `ContractorService.applicants()` → `ApplicationService.forPoster(_, contractor)` | same, filtered `postedByRole=contractor` | `200` |
+| Accept | `*.decideApplication(id, 'accepted')` → `ApplicationService.decide` | `POST /applications/{id}/accept` | `200` (openings −1) |
+| Reject | `*.decideApplication(id, 'rejected')` → `ApplicationService.decide` | `POST /applications/{id}/reject` | `200` |
+
+There is no single "all applicants across my jobs" endpoint, so `forPoster`
+fetches the poster's jobs (`/me/posted-jobs`), keeps those posted under the
+requested role, then fetches applicants per job and flattens them (N+1, accepted
+for MVP — the poster's job count is small). The poster id argument is ignored in
+API mode; the token's `sub` identifies the poster.
+
+### DTO mapping
+
+`ApplicantDto` → the legacy flat applicant shape via a new `mapApplicant()` in
+`mappers.js`:
+
+```
+{ id, applicantId: applicant.id, applicantName: applicant.name,
+  trade: applicant.trade, rating: applicant.rating,
+  jobId: jobCode, jobCode, jobTitle, postedByRole, status,
+  appliedAt, decidedAt, updatedAt }
+```
+
+`status` (`pending|accepted|rejected|withdrawn`) and `postedByRole`
+(`employer|contractor`) serialize lowercase, matching the existing `StatusPill`
+and role filtering — no UI change.
+
+### Service replacements
+
+- `ApplicationService.forPoster` and `ApplicationService.decide` gain an API
+  branch (`USE_API`); mock branches preserved.
+- `EmployerService.applications` / `decideApplication` and
+  `ContractorService.applicants` / `decideApplication` already delegate to
+  `ApplicationService`, so they become API-backed automatically — **no change to
+  the Employer/Contractor service files.**
+- The employer/contractor **dashboard reads** (`myJobs`, `summary`,
+  `findWorkers`, `savedWorkers`, `managedWorkers`, `projects`) stay on mock.
+
+### Loading, transitions & duplicate actions
+
+- **Server-confirmed, no optimism**: await the API, then `reload()` the applicant
+  list. Accept/Reject buttons are disabled per-row (`busyId`) while in flight.
+- **Transitions**: accept `pending → accepted` (decrements job openings, no
+  auto-close); reject `pending → rejected`. Buttons only render on `pending`
+  rows, so decided rows can't be re-decided from the UI.
+- **Duplicate / stale actions**: a second decide on an already-decided
+  application → `409 application.not_pending`; deciding on a `Completed` job →
+  `409 application.job_completed`. Both are caught and shown as a friendly
+  message, then the list is re-synced via `reload()`.
+
+### Error handling & authorization behaviour
+
+- Backend ProblemDetails `code` → hardcoded English messages (these dashboard
+  pages are English-only by existing convention):
+  - `application.not_pending` → "This application was already decided."
+  - `application.job_completed` → "This job is completed; applications can no longer be decided."
+  - `application.forbidden` → "You can only manage applications for your own jobs."
+  - `application.not_found` → "This application no longer exists."
+  - anything else → generic accept/reject failure.
+- **Ownership** is enforced server-side: `GET /jobs/{code}/applications` and
+  accept/reject return `403 application.forbidden` for a non-owner. In normal use
+  `forPoster` only reads the poster's own jobs, so ownership always holds; a
+  forced/stale cross-owner action surfaces the graceful 403 message.
+- **Authorization**: all endpoints require the `Employer` or `Contractor` role.
+  The applicant pages live under the role-guarded `/app/employer` and
+  `/app/contractor` routes, so a worker never reaches them.
+
+### Verification checklist — verified 2026-07-05
+
+- [x] Employer Applications page lists real applicants for the employer's posted jobs.
+- [x] Contractor Applicants page lists real applicants for the contractor's posted jobs.
+- [x] Accept a pending applicant → status becomes Accepted; **job openings decremented** (2 → 1, confirmed in-UI via the public job read and at the HTTP layer).
+- [x] Reject a pending applicant → status becomes Rejected.
+- [x] Buttons disappear once decided; **refresh restores the decided state from the backend and the action buttons stay hidden** (accept and reject).
+- [x] Duplicate/stale decide → `409 application.not_pending` handled with a friendly message, no crash.
+- [x] Decide on a completed job → `409 application.job_completed` handled gracefully (real backend response).
+- [x] Ownership: a poster cannot view/accept/reject applications on someone else's job (`403`); UI shows a graceful message and preserves state (forced-403 interception + HTTP layer).
+- [x] Role scoping: `forPoster` filters `/me/posted-jobs` by `postedByRole`, so a poster sees only the persona being viewed (contractor page shows only contractor-posted jobs' applicants).
+- [x] Token refresh transparent; Phase 1 & 2 flows still pass.
+
+---
+
 ## Remaining mock services (dashboard reads)
 
 These stay on **mock data** for this milestone. They are the dashboard read
@@ -213,9 +305,8 @@ marked in code with a `MOCK (dashboard read)` banner comment so future backend
 wiring is obvious:
 
 - `WorkerService` — dashboard summary, availability, profile self-view *(apply/withdraw/my-applications and the nearby-jobs feed move to the API in Phase 2)*
-- `ContractorService` — managed workers, contractor dashboard summary
-- `EmployerService` — saved workers, employer dashboard summary *(accept/reject
-  moves to the API in Phase 3)*
+- `ContractorService` — my-jobs list, managed workers, projects, dashboard summary *(view-applicants and accept/reject move to the API in Phase 3)*
+- `EmployerService` — my-jobs list, find/saved workers, dashboard summary *(view-applicants and accept/reject move to the API in Phase 3)*
 - `AgentService`, `AdminService` — agent/admin dashboards
 - `NotificationService`, `MessageService`, `ComplaintService`, `ReviewService`
 

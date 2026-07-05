@@ -2,7 +2,7 @@ import { respond, fail, request, USE_API } from './http';
 import { APPLICATIONS } from '@/data/applications';
 import { JOBS } from '@/data/jobs';
 import { USERS } from '@/data/users';
-import { mapMyApplication } from './mappers';
+import { mapMyApplication, mapApplicant } from './mappers';
 
 function now() { return new Date().toISOString(); }
 
@@ -63,6 +63,13 @@ export const ApplicationService = {
 
   /** Poster accepts or rejects an applicant. Only valid while pending. */
   async decide(applicationId, decision) {
+    if (USE_API) {
+      // Ownership is enforced by the backend from the JWT. Accept decrements the
+      // job's openings server-side; reject does not. Returns the updated applicant.
+      const action = decision === 'accepted' ? 'accept' : 'reject';
+      const dto = await request(`/applications/${encodeURIComponent(applicationId)}/${action}`, { method: 'POST' });
+      return mapApplicant(dto);
+    }
     const app = APPLICATIONS.find((a) => a.id === applicationId);
     if (!app || app.status !== 'pending') return fail('This application has already been decided.');
     app.status = decision;
@@ -105,6 +112,19 @@ export const ApplicationService = {
    * reasoning as EmployerDetail's open-jobs count.
    */
   async forPoster(posterId, posterRole) {
+    if (USE_API) {
+      // No single "all applicants across my jobs" endpoint: list the poster's
+      // jobs, keep those posted under the requested role (persona scoping), then
+      // fetch applicants per job and flatten. N+1, acceptable for MVP — see
+      // docs/FRONTEND_WRITE_INTEGRATION.md. `posterId` is ignored; the JWT sub
+      // identifies the poster.
+      const postedJobs = await request('/me/posted-jobs');
+      const forRole = postedJobs.filter((j) => j.postedByRole === posterRole);
+      const perJob = await Promise.all(
+        forRole.map((j) => request(`/jobs/${encodeURIComponent(j.code)}/applications`)),
+      );
+      return perJob.flat().map(mapApplicant);
+    }
     const posterJobIds = new Set(
       JOBS.filter((j) => j.postedById === posterId && j.postedByRole === posterRole).map((j) => j.id),
     );

@@ -83,6 +83,27 @@ export function mapMyApplication(dto) {
   };
 }
 
+// Backend ApplicantDto (a poster's view of one application to their job) ->
+// the flat shape the applicant-management tables consume. `jobId` mirrors
+// `jobCode` because the frontend keys jobs by their code.
+export function mapApplicant(dto) {
+  return {
+    id: dto.id,
+    applicantId: dto.applicant.id,
+    applicantName: dto.applicant.name,
+    trade: dto.applicant.trade,
+    rating: dto.applicant.rating,
+    jobId: dto.jobCode,
+    jobCode: dto.jobCode,
+    jobTitle: dto.jobTitle,
+    postedByRole: dto.postedByRole,
+    status: dto.status,
+    appliedAt: dto.appliedAt,
+    decidedAt: dto.decidedAt ?? null,
+    updatedAt: dto.updatedAt,
+  };
+}
+
 export function mapReview(dto) {
   return {
     id: dto.id,

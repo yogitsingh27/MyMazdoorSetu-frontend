@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { EmployerService } from '@/services';
 import PostJobModal from '@/components/job/PostJobModal';
+import { decideErrorMessage } from '@/pages/shared/applicantErrors';
 
 export function FindWorkersPage() {
   const { data: workers, loading } = useServiceData(() => EmployerService.findWorkers(), []);
@@ -88,10 +89,15 @@ export function EmployerApplicationsPage() {
 
   const decide = async (app, decision) => {
     setBusyId(app.id);
-    await EmployerService.decideApplication(app.id, decision);
-    toast(decision === 'accepted' ? `${app.applicantName} accepted — they've been notified` : `${app.applicantName} declined`, decision === 'accepted' ? 'success' : 'info');
-    setBusyId(null);
-    reload();
+    try {
+      await EmployerService.decideApplication(app.id, decision);
+      toast(decision === 'accepted' ? `${app.applicantName} accepted — they've been notified` : `${app.applicantName} declined`, decision === 'accepted' ? 'success' : 'info');
+    } catch (err) {
+      toast(decideErrorMessage(err), 'error');
+    } finally {
+      setBusyId(null);
+      reload(); // server-confirmed: re-sync the list from the backend
+    }
   };
 
   return (
