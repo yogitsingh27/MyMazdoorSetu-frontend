@@ -353,7 +353,9 @@ Implemented **backend integration tests** over the real HTTP API (`WebApplicatio
 - *Files:* new tests under `Backend/tests/`, `package.json` (scripts/devDeps), new eslint config, new `.github/workflows/ci.yml`.
 - *Verify:* tests pass locally; CI green on a push.
 
-### Phase 6 — Deployment runbook (docs only)
+### Phase 6 — Deployment runbook (docs only) — **DONE 2026-07-05**
+
+`docs/DEPLOYMENT.md` completed: all 18 sections (system requirements → future improvements) plus a verified configuration-reference table, cross-checked against `Program.cs`, `appsettings*.json`, `AuthController`, `vite.config.js`, `.env*`, `package.json`, and `ci.yml`. Documents the single-origin reverse-proxy topology, env vars/secrets, JWT rotation, HTTPS/forwarded-headers, migrations (auto-on-startup vs separate step), `/health`, logging, backups, rollback, monitoring, checklist, and troubleshooting. Deployment inconsistencies surfaced (not code-changed): CORS lacks `AllowCredentials` → same-origin required; dev port `5244` (launchSettings) vs `5199` (Vite proxy); `.env.example` absolute vs `.env.development` relative API URL; `/health` behind HTTPS redirect. No application code was modified.
 - Fill `docs/DEPLOYMENT.md`: frontend + backend build; required env/secrets (`Jwt:Key`, `ConnectionStrings:Default`, `Cors:Origins`, `VITE_API_URL`, `VITE_USE_API`); migration application; reverse-proxy / forwarded-headers / HTTPS / same-site cookie topology; health check; rate limits.
 - *Files:* `docs/DEPLOYMENT.md` only.
 - *Verify:* a second reader could deploy from the doc.
