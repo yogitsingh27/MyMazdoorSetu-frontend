@@ -12,6 +12,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { PageSkeleton } from '@/components/common/Skeleton';
 import { EMPLOYER_KIND_LABELS } from '@/data/companies';
 import { ROLE } from '@/types/roles';
+import { onActivate } from '@/utils/a11y';
 
 // Facilities are things the poster offers (distinct from requirements, which
 // are what the worker needs to have). A per-tag icon where a real one fits;
@@ -144,7 +145,7 @@ export default function JobDetail() {
   return (
     <>
       <section className="section job-detail">
-        <a className="back-link" onClick={() => navigate('/jobs')}>
+        <a className="back-link" role="button" tabIndex={0} onClick={() => navigate('/jobs')} onKeyDown={onActivate(() => navigate('/jobs'))}>
           <Icon name="arrow" size={13} /> {t('jobDetail.backToJobs')}
         </a>
 

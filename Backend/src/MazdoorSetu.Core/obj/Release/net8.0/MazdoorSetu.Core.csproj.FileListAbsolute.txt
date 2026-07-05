@@ -1,0 +1,12 @@
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\bin\Release\net8.0\MazdoorSetu.Core.deps.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\bin\Release\net8.0\MazdoorSetu.Core.dll
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\bin\Release\net8.0\MazdoorSetu.Core.pdb
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.AssemblyInfoInputs.cache
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.AssemblyInfo.cs
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.csproj.CoreCompileInputs.cache
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.sourcelink.json
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.dll
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\refint\MazdoorSetu.Core.dll
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\MazdoorSetu.Core.pdb
+C:\Users\hp\Desktop\mymazdoorsetu\Backend\src\MazdoorSetu.Core\obj\Release\net8.0\ref\MazdoorSetu.Core.dll

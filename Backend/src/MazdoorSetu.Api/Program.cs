@@ -96,6 +96,9 @@ builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<AuthService>();
 
 // --- Rate limiting: basic per-IP fixed window for the auth endpoints ---
+// Limits are configurable (defaults 20/60 per minute); tests raise them to avoid throttling.
+var authPermitLimit = builder.Configuration.GetValue<int?>("RateLimit:AuthPermitPerMinute") ?? 20;
+var writePermitLimit = builder.Configuration.GetValue<int?>("RateLimit:WritePermitPerMinute") ?? 60;
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("auth", httpContext =>
@@ -103,7 +106,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 20, // per IP per minute across the auth endpoints; tunable
+                PermitLimit = authPermitLimit, // per IP per minute across the auth endpoints; tunable
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
             }));
@@ -121,7 +124,7 @@ builder.Services.AddRateLimiter(options =>
         var key = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter("write:" + key, _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 60, // writes per IP per minute; tunable
+            PermitLimit = writePermitLimit, // writes per IP per minute; tunable
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0,
         });
@@ -168,7 +171,10 @@ else
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
+        // Migrations only apply to a relational provider (skips e.g. the in-memory
+        // provider used by integration tests).
+        if (db.Database.IsRelational())
+            await db.Database.MigrateAsync();
     }
 
     // Unhandled exceptions return an RFC 7807 ProblemDetails (no stack traces in prod).
@@ -202,3 +208,6 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
+
+// Exposed so the integration-test project can boot the real app via WebApplicationFactory.
+public partial class Program { }

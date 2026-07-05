@@ -333,14 +333,20 @@ Implemented: dashboard summary stats (all roles) show honest placeholders ("Afte
 - *Files:* `config/dashboards.js`, `pages/shared/DashboardHome.jsx`, role services' `summary()`, `pages/employer/EmployerPages.jsx`, `pages/contractor/ContractorPages.jsx`, `pages/worker/WorkerPages.jsx`, `services/EmployerService.js`.
 - *Verify:* no fabricated figures render; no action silently discards; find-workers behaves honestly.
 
-### Phase 4 — Accessibility baseline
+### Phase 4 — Accessibility baseline — **DONE & verified 2026-07-05**
+
+Implemented (no layout changes): non-semantic clickables are now keyboard-operable — the Topbar brand + public nav-links and the three detail-page back-links get `role="button"`, `tabIndex={0}`, and Enter/Space activation via a new `onActivate` helper (`src/utils/a11y.js`). `PostJobModal` form fields are label-associated (`htmlFor`/`id` on all 7), its close button gets `aria-label="Close"`, and its two toggle switches get `aria-label` + `aria-pressed`. The Managed-workers switch gets `aria-label`/`aria-pressed`; the RegisterPage role choices become an `aria`-labelled group. NotificationBell (`aria-label`) and RoleSwitcher (`aria-haspopup`/`expanded`/`listbox`/`option`) were already accessible — left as-is. Modal focus-trap remains deferred to post-beta (§11.4). Verified with 12 checks: keyboard focus + Enter activation of nav-links/brand/back-links, no keyboard trap on landing, all 7 modal labels resolve via `getByLabel`, and toggle/close accessible names + `aria-pressed`.
+
 - **Keyboard-activable nav:** convert `<a onClick>` nav/back links (Topbar, JobDetail back-link) to buttons or add `role`/`tabIndex`/keydown.
 - **Label association:** add `htmlFor`/`id` to `PostJobModal` (and any other unassociated dashboard form fields).
 - **Icon-only controls:** `aria-label` on the notification bell and toggle switches; `aria-pressed` where appropriate.
 - *Files:* `components/layout/Topbar.jsx`, `components/layout/NotificationBell.jsx`, `components/job/PostJobModal.jsx`, `pages/public/JobDetail.jsx`, switch usages (ContractorPages, PostJobModal). Modal focus-trap is explicitly **deferred to after beta** (§11.4).
 - *Verify:* keyboard-only pass over the changed controls; labels announced; no visual change.
 
-### Phase 5 — Critical-path tests + CI
+### Phase 5 — Critical-path tests + CI — **DONE & verified 2026-07-05**
+
+Implemented **backend integration tests** over the real HTTP API (`WebApplicationFactory<Program>`), with only the DB provider swapped for an isolated in-memory store (`ApiFactory`) so the suite runs anywhere including Linux CI — no SQL Server needed. Two high-value tests cover all required workflows: `Auth_Register_Login_Refresh_Works` (register→login→authenticated `/me`→refresh→wrong-password 401) and `HiringWorkflow_Create_Apply_Withdraw_Accept_Reject_Close_Complete` (create → apply ×2 → withdraw → reactivate(200, same id) → duplicate(409) → view applicants → role/ownership guard(403) → accept(openings 2→1) → reject → close → complete). **Frontend CI** = ESLint (`.eslintrc.cjs`, `npm run lint`) + production build. **CI** (`.github/workflows/ci.yml`): frontend job (`npm ci`/lint/build) and backend job (restore/Release build/integration tests). Small enabling changes to `Program.cs`: `public partial class Program`, configurable rate limits (defaults 20/60 unchanged; tests raise them), and a relational-only guard on migrate-on-startup. Verified locally: **2/2 tests pass** (Debug + Release, `--no-build`), lint clean (0 problems), build green, and both CI command sequences run end-to-end.
+
 - **Backend integration tests** (fill the empty `MazdoorSetu.IntegrationTests`) with `WebApplicationFactory` over a test database, covering: register→login→refresh→logout; apply→withdraw→reapply→duplicate(409); accept/reject + ownership(403) + invalid-transition(409); create + validation(400) + close→complete.
 - **Frontend:** ESLint config + `lint` script; `build` as the CI gate (frontend unit-test runner per decision below).
 - **CI:** `.github/workflows/ci.yml` — frontend `npm ci && lint && build`; backend `dotnet build && dotnet test`.

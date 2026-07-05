@@ -4,6 +4,7 @@ import { WorkerService } from '@/services';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import Icon from '@/components/common/Icon';
+import { onActivate } from '@/utils/a11y';
 import { Stars } from '@/components/common/Rating';
 import { RatingBars } from '@/components/common/Reviews';
 import { Avatar } from '@/components/common/Primitives';
@@ -51,7 +52,7 @@ export default function WorkerDetail() {
   return (
     <>
       <section className="section worker-detail">
-        <a className="back-link" onClick={() => navigate('/workers')}>
+        <a className="back-link" role="button" tabIndex={0} onClick={() => navigate('/workers')} onKeyDown={onActivate(() => navigate('/workers'))}>
           <Icon name="arrow" size={13} /> {t('workerDetail.backToWorkers')}
         </a>
 

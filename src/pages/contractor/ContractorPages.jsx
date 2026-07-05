@@ -161,7 +161,7 @@ export function ManagedWorkersPage() {
                   <td>{w.trade}</td>
                   <td><Stars value={w.rating} size={12} /> <span className="mono" style={{ fontSize: 12 }}>{w.rating.toFixed(1)}</span></td>
                   <td className="num">{w.jobs}</td>
-                  <td><button className={`switch ${w.contactDirect ? 'on' : ''}`} onClick={() => toggleContact(i)} /></td>
+                  <td><button type="button" className={`switch ${w.contactDirect ? 'on' : ''}`} onClick={() => toggleContact(i)} aria-pressed={!!w.contactDirect} aria-label={`Direct contact for ${w.name}`} /></td>
                 </tr>
               ))}
             </tbody>

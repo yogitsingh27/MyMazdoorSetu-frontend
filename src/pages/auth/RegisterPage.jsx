@@ -71,8 +71,8 @@ export default function RegisterPage() {
           </div>
 
           <div className="field full" style={{ marginTop: 14 }}>
-            <label>I want to (choose one or more)</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            <label id="roles-group-label">I want to (choose one or more)</label>
+            <div role="group" aria-labelledby="roles-group-label" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
               {SELECTABLE_ROLES.map((r) => {
                 const m = ROLE_META[r];
                 const active = roles.includes(r);

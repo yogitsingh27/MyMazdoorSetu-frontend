@@ -67,47 +67,47 @@ export default function PostJobModal({ onClose, onPosted, postedAsRole }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>Post a job</h3>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
         </div>
         <form onSubmit={publish}>
           <div className="form-grid">
             <div className="field full">
-              <label>Job title</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Wall plastering, 2BHK flat" />
+              <label htmlFor="pj-title">Job title</label>
+              <input id="pj-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Wall plastering, 2BHK flat" />
             </div>
             <div className="field">
-              <label>Trade</label>
-              <select value={trade} onChange={(e) => setTrade(e.target.value)}>{TRADES.map((t) => <option key={t}>{t}</option>)}</select>
+              <label htmlFor="pj-trade">Trade</label>
+              <select id="pj-trade" value={trade} onChange={(e) => setTrade(e.target.value)}>{TRADES.map((t) => <option key={t}>{t}</option>)}</select>
             </div>
             <div className="field">
-              <label>Wage</label>
-              <input value={wage} onChange={(e) => setWage(e.target.value)} placeholder="₹700–900/day" />
+              <label htmlFor="pj-wage">Wage</label>
+              <input id="pj-wage" value={wage} onChange={(e) => setWage(e.target.value)} placeholder="₹700–900/day" />
             </div>
             <div className="field">
-              <label>Location</label>
-              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Area, city" />
+              <label htmlFor="pj-location">Location</label>
+              <input id="pj-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Area, city" />
             </div>
             <div className="field">
-              <label>Duration</label>
-              <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="5 days" />
+              <label htmlFor="pj-duration">Duration</label>
+              <input id="pj-duration" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="5 days" />
             </div>
             <div className="field">
-              <label>Openings</label>
-              <input type="number" min="1" value={openings} onChange={(e) => setOpenings(e.target.value)} />
+              <label htmlFor="pj-openings">Openings</label>
+              <input id="pj-openings" type="number" min="1" value={openings} onChange={(e) => setOpenings(e.target.value)} />
             </div>
             <div className="field full">
-              <label>Description</label>
-              <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What the work involves, timings, site details…" />
+              <label htmlFor="pj-description">Description</label>
+              <textarea id="pj-description" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What the work involves, timings, site details…" />
             </div>
           </div>
 
           <div className="toggle-row">
             <div><div className="tlabel">Allow direct contact</div><div className="thint">Workers can call you directly instead of only messaging in-app</div></div>
-            <button type="button" className={`switch ${direct ? 'on' : ''}`} onClick={() => setDirect(!direct)} />
+            <button type="button" className={`switch ${direct ? 'on' : ''}`} onClick={() => setDirect(!direct)} aria-pressed={direct} aria-label="Allow direct contact" />
           </div>
           <div className="toggle-row">
             <div><div className="tlabel">Meals included</div><div className="thint">Shown as a tag on the job listing</div></div>
-            <button type="button" className={`switch ${meals ? 'on' : ''}`} onClick={() => setMeals(!meals)} />
+            <button type="button" className={`switch ${meals ? 'on' : ''}`} onClick={() => setMeals(!meals)} aria-pressed={meals} aria-label="Meals included" />
           </div>
 
           {error && <p style={{ color: 'var(--rose)', fontSize: 13, marginTop: 10 }}>{error}</p>}

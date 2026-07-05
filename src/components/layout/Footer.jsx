@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/common/Icon';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ROLE, ROLE_ORDER, ROLE_META } from '@/types/roles';
+import { ROLE, ROLE_ORDER } from '@/types/roles';
 
 const FOOTER_ROLES = ROLE_ORDER.filter((r) => r !== ROLE.ADMIN);
 

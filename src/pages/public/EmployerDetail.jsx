@@ -3,6 +3,7 @@ import { useServiceData } from '@/hooks';
 import { EmployerService } from '@/services';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Icon from '@/components/common/Icon';
+import { onActivate } from '@/utils/a11y';
 import { Stars } from '@/components/common/Rating';
 import { RatingBars } from '@/components/common/Reviews';
 import { Avatar } from '@/components/common/Primitives';
@@ -46,7 +47,7 @@ export default function EmployerDetail() {
   return (
     <>
       <section className="section job-detail employer-detail">
-        <a className="back-link" onClick={() => navigate(-1)}>
+        <a className="back-link" role="button" tabIndex={0} onClick={() => navigate(-1)} onKeyDown={onActivate(() => navigate(-1))}>
           <Icon name="arrow" size={13} /> {t('employerDetail.back')}
         </a>
 

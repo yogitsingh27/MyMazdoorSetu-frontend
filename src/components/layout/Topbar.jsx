@@ -4,6 +4,7 @@ import RoleSwitcher from './RoleSwitcher';
 import NotificationBell from './NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { onActivate } from '@/utils/a11y';
 
 export default function Topbar({ loggedIn }) {
   const navigate = useNavigate();
@@ -15,14 +16,14 @@ export default function Topbar({ loggedIn }) {
 
   return (
     <header className="topbar">
-      <div className="brand" onClick={goHome} style={{ cursor: 'pointer' }}>
+      <div className="brand" onClick={goHome} onKeyDown={onActivate(goHome)} role="button" tabIndex={0} aria-label="MyMazdoorSetu home" style={{ cursor: 'pointer' }}>
         <span className="mark">MS</span> MyMazdoorSetu
       </div>
 
       {!loggedIn && (
         <nav className="nav-links">
-          <a className="nav-link" onClick={() => navigate('/jobs')}>{t('nav.browseJobs')}</a>
-          <a className="nav-link" onClick={() => navigate('/how-it-works')}>{t('nav.howItWorks')}</a>
+          <a className="nav-link" role="button" tabIndex={0} onClick={() => navigate('/jobs')} onKeyDown={onActivate(() => navigate('/jobs'))}>{t('nav.browseJobs')}</a>
+          <a className="nav-link" role="button" tabIndex={0} onClick={() => navigate('/how-it-works')} onKeyDown={onActivate(() => navigate('/how-it-works'))}>{t('nav.howItWorks')}</a>
         </nav>
       )}
 

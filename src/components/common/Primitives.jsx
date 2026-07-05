@@ -1,4 +1,3 @@
-import Icon from './Icon';
 import { initial, avatarTint } from '@/utils/format';
 
 export function PageHead({ title, desc, action }) {

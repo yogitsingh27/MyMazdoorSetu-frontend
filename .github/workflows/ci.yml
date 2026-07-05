@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  backend:
+    name: Backend (build + integration tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet restore MazdoorSetu.sln
+      - run: dotnet build MazdoorSetu.sln -c Release --no-restore
+      # Integration tests run over an in-memory provider — no SQL Server needed on CI.
+      - run: dotnet test tests/MazdoorSetu.IntegrationTests/MazdoorSetu.IntegrationTests.csproj -c Release --no-build --verbosity normal
