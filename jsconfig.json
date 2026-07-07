@@ -1,11 +1,17 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
     "jsx": "react-jsx",
-    "checkJs": false
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "allowJs": true
   },
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
