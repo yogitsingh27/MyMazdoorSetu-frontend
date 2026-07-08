@@ -1,31 +1,68 @@
 :root{
+    /* ============================================================
+       DESIGN TOKENS — see docs/REDESIGN_SPEC.md Part 1.
+       Phase 1 (Foundation): contrast-fixed palette, semantic aliases,
+       full type scale, spacing scale. Landing-era tokens (--fs-display,
+       --fs-h2) keep their current values until Phase 2 retunes the
+       landing page itself.
+       ============================================================ */
+
+    /* brand */
     --navy:#1B2A4A;
     --navy-soft:#24355C;
     --navy-light:#3D5080;
-    --ink:#0F1830; /* deep, near-black navy reserved for the two dark "record" bands — real drama, not pastel navy */
+    --ink:#0F1830; /* deep, near-black navy — dark chapter bands, and the ONLY text color allowed on amber */
     --page:#FAF8F3; /* warm paper, not clinical grey — the base tone of the whole product */
     --paper:#FFFFFF;
     --border:#EAE4D8;
-    --border-strong:#DAD2C0;
-    --text:#1B2030;
-    --text-dim:#646B82;
-    --text-mute:#9298AC;
-    --amber:#DD7F16;
-    --amber-dark:#B06810;
-    --amber-light:#FCEDDA;
-    --teal:#1B8C7A;
-    --teal-light:#E0F4EF;
-    --rose:#C8504A;
-    --rose-light:#FAE3E1;
-    --display:'Sora', sans-serif;
-    --body:'Inter', sans-serif;
-    --mono:'IBM Plex Mono', monospace;
+    --border-strong:#D6CDBB;
 
-    /* type scale — landing-page chapter hierarchy (hero, chapter headings, lead body, body) */
+    /* text — every value ≥4.5:1 on --paper (WCAG AA for normal text) */
+    --text:#1B2030;      /* 15.7:1 */
+    --text-dim:#5A6178;  /* 5.9:1  — secondary text */
+    --text-mute:#6E7488; /* 4.7:1  — tertiary; min 12px, prefer 14px */
+
+    /* accents — amber fills carry --ink text, never white (brand rule, 5.4:1) */
+    --amber:#DD7F16;
+    --amber-dark:#9A5A08; /* amber TEXT on paper/page — 5.5:1 */
+    --amber-light:#FCEDDA;
+    --teal:#177865;       /* success text/icons — 5.4:1 */
+    --teal-light:#E0F4EF;
+    --rose:#B03A34;       /* danger — white text on it passes 5.6:1 */
+    --rose-light:#FAE3E1;
+
+    /* semantic aliases — components prefer these over raw colors */
+    --action:var(--amber);
+    --action-ink:var(--ink);
+    --success:var(--teal);
+    --danger:var(--rose);
+    --info:var(--navy-light);
+
+    /* families — Mukta carries Devanagari at matching weights, so Hindi
+       renders with the brand's weight axis instead of the OS fallback */
+    --display:'Sora','Mukta',sans-serif;
+    --body:'Inter','Mukta',sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+
+    /* type scale — no inline font sizes; every text style maps to a token.
+       --fs-display / --fs-h2 are landing-page values retuned in Phase 2. */
     --fs-display:58px;
+    --fs-h1:30px;
     --fs-h2:34px;
+    --fs-h3:18px;
+    --fs-h4:16px;
     --fs-body-lg:16px;
-    --fs-body:14.5px;
+    --fs-body:15px;
+    --fs-sm:14px;  /* functional floor for running text */
+    --fs-xs:12px;  /* uppercase labels, ticket IDs only */
+
+    /* spacing scale — 4px base; no inline magic margins */
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
+    --s6:24px; --s7:32px; --s8:48px; --s9:64px;
+
+    /* touch — minimum hit sizes (WCAG 2.5.8 / one-thumb use) */
+    --tap:44px;
+    --tap-sm:40px;
 
     /* radius scale */
     --r-xs:7px; --r-sm:9px; --r:10px; --r-md:12px; --r-lg:14px; --r-xl:18px;
